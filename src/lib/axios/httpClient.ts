@@ -1,13 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getNewTokensWithRefreshToken } from "@/services/auth.services";
 import { ApiResponse } from "@/types/api.types";
 import axios from "axios";
 import { cookies, headers } from "next/headers";
 import { isTokenExpiringSoon } from "../tokenUtils";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-if (!API_BASE_URL) {
-  throw new Error("API_BASE_URL is not defined in environment variables");
+if (!baseUrl) {
+  throw new Error(
+    "NEXT_PUBLIC_API_BASE_URL is not defined in environment variables",
+  );
 }
 
 async function tryRefreshToken(
@@ -47,12 +50,12 @@ const axiosInstance = async () => {
   // eg Cookie: "accessToken=abc123; refreshToken=def456"
 
   const instance = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: `${baseUrl}`,
     timeout: 30000,
     headers: {
-      "Content-Type": "application/json",
       Cookie: cookieHeader,
     },
+    withCredentials: true,
   });
 
   return instance;
@@ -82,7 +85,7 @@ const httpGet = async <TData>(
 
 const httpPost = async <TData>(
   endpoint: string,
-  data: unknown,
+  data?: unknown,
   options?: ApiRequestOptions,
 ): Promise<ApiResponse<TData>> => {
   try {

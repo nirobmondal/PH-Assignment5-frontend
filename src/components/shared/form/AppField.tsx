@@ -6,20 +6,26 @@ import React from "react";
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
-
   if (error && typeof error === "object") {
     if ("message" in error && typeof error.message === "string") {
       return error.message;
     }
   }
-
   return String(error);
 };
 
 type AppFieldProps = {
   field: AnyFieldApi;
   label: string;
-  type?: "text" | "email" | "password" | "number" | "date" | "time";
+  type?:
+    | "text"
+    | "email"
+    | "password"
+    | "number"
+    | "date"
+    | "time"
+    | "tel"
+    | "file";
   placeholder?: string;
   append?: React.ReactNode;
   prepend?: React.ReactNode;
@@ -53,9 +59,10 @@ const AppField = ({
         {label}
       </Label>
 
+      {/* Relative container only for input + prepend/append */}
       <div className="relative">
         {prepend && (
-          <div className="absolute inset-y-0 left-0 items-center pl-3 pointer-events-none z-10">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
             {prepend}
           </div>
         )}
@@ -79,21 +86,22 @@ const AppField = ({
         />
 
         {append && (
-          <div className="absolute inset-y-0 right-0 items-center pr-3 pointer-events-none z-10">
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10 pointer-events-auto">
             {append}
           </div>
         )}
-
-        {hasError && (
-          <p
-            id={`${field.name}-error`}
-            role="alert"
-            className="text-sm text-destructive"
-          >
-            {firstError}
-          </p>
-        )}
       </div>
+
+      {/* Error message is now OUTSIDE the relative div */}
+      {hasError && (
+        <p
+          id={`${field.name}-error`}
+          role="alert"
+          className="text-sm text-destructive"
+        >
+          {firstError}
+        </p>
+      )}
     </div>
   );
 };

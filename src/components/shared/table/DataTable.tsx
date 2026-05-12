@@ -23,10 +23,10 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   PaginationState,
-  SortingState,
+  // SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import DataTableFilters, {
   DataTableFilterConfig,
@@ -49,10 +49,10 @@ interface DataTableProps<TData> {
   toolbarAction?: React.ReactNode;
   emptyMessage?: string;
   isLoading?: boolean;
-  sorting?: {
-    state: SortingState;
-    onSortingChange: (state: SortingState) => void;
-  };
+  // sorting?: {
+  //   state: SortingState;
+  //   onSortingChange: (state: SortingState) => void;
+  // };
   pagination?: {
     state: PaginationState;
     onPaginationChange: (state: PaginationState) => void;
@@ -82,7 +82,7 @@ const DataTable = <TData,>({
   toolbarAction,
   emptyMessage,
   isLoading,
-  sorting,
+  // sorting,
   pagination,
   search,
   filters,
@@ -153,25 +153,25 @@ const DataTable = <TData,>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    manualSorting: !!sorting,
+    // manualSorting: !!sorting,
     manualPagination: !!pagination,
     pageCount: pagination ? Math.max(meta?.totalPages ?? 0, 0) : undefined,
     state: {
-      ...(sorting ? { sorting: sorting.state } : {}),
+      // ...(sorting ? { sorting: sorting.state } : {}),
       ...(pagination ? { pagination: pagination.state } : {}),
     },
-    onSortingChange: sorting
-      ? (updater) => {
-          const currentSortingState = sorting.state;
+    // onSortingChange: sorting
+    //   ? (updater) => {
+    //       const currentSortingState = sorting.state;
 
-          const nextSortingState =
-            typeof updater === "function"
-              ? updater(currentSortingState)
-              : updater;
+    //       const nextSortingState =
+    //         typeof updater === "function"
+    //           ? updater(currentSortingState)
+    //           : updater;
 
-          sorting.onSortingChange(nextSortingState);
-        }
-      : undefined,
+    //       sorting.onSortingChange(nextSortingState);
+    //     }
+    //   : undefined,
     onPaginationChange: pagination
       ? (updater) => {
           const currentPaginationState = pagination.state;
@@ -232,31 +232,12 @@ const DataTable = <TData,>({
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                      <Button
-                        variant={"ghost"}
-                        className="h-auto cursor-pointer p-0 font-semibold hover:bg-transparent hover:text-inherit focus-visible:ring-0"
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
                           header.column.columnDef.header,
                           header.getContext(),
                         )}
-
-                        {header.column.getIsSorted() === "asc" ? (
-                          <ArrowUp className="ml-1 h-4 w-4" />
-                        ) : header.column.getIsSorted() === "desc" ? (
-                          <ArrowDown className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />
-                        )}
-                      </Button>
-                    ) : (
-                      flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )
-                    )}
                   </TableHead>
                 ))}
               </TableRow>

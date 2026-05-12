@@ -1,15 +1,5 @@
+import { NavSection } from "@/types/dashboard.types";
 import { getDefaultDashboardRoute, UserRole } from "./authUtils";
-
-export interface NavItem {
-  title: string;
-  href: string;
-  icon: string;
-}
-
-export interface NavSection {
-  title?: string;
-  items: NavItem[];
-}
 
 export const getCommonNavItems = (role: UserRole): NavSection[] => {
   const defaultDashboard = getDefaultDashboardRoute(role);
@@ -28,7 +18,7 @@ export const getCommonNavItems = (role: UserRole): NavSection[] => {
         },
         {
           title: "My Profile",
-          href: `/my-profile`,
+          href: "/my-profile",
           icon: "User",
         },
       ],
@@ -110,7 +100,6 @@ export const adminNavItems: NavSection[] = [
       },
     ],
   },
-
   {
     title: "Orders",
     items: [
@@ -125,12 +114,32 @@ export const adminNavItems: NavSection[] = [
 
 export const customerNavItems: NavSection[] = [
   {
+    title: "Create Seller Profile",
+    items: [
+      {
+        title: "Become a Seller",
+        href: "/dashboard/become-seller",
+        icon: "UserPlus",
+      },
+    ],
+  },
+  {
     title: "Cart",
     items: [
       {
         title: "View Cart",
         href: "/dashboard/cart",
         icon: "ShoppingCart",
+      },
+    ],
+  },
+  {
+    title: "Checkout",
+    items: [
+      {
+        title: "Checkout and Place Order",
+        href: "/dashboard/checkout",
+        icon: "CreditCard",
       },
     ],
   },
@@ -152,11 +161,11 @@ export const getNavItemsByRole = (role: UserRole): NavSection[] => {
   switch (role) {
     case "ADMIN":
       return [...commonNavItems, ...adminNavItems];
-
     case "SELLER":
       return [...commonNavItems, ...sellerNavItems];
-
     case "CUSTOMER":
       return [...commonNavItems, ...customerNavItems];
+    default:
+      return commonNavItems;
   }
 };

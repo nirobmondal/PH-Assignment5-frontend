@@ -1,4 +1,8 @@
-export type UserRole = "ADMIN" | "CUSTOMER" | "SELLER";
+export enum UserRole {
+  ADMIN = "ADMIN",
+  SELLER = "SELLER",
+  CUSTOMER = "CUSTOMER",
+}
 
 export const authRoutes = [
   "/login",

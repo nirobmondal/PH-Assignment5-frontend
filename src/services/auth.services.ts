@@ -6,16 +6,29 @@ import {
   UserRole,
 } from "@/lib/authUtils";
 import { httpClient } from "@/lib/axios/httpClient";
+import { deleteCookie } from "@/lib/cookieUtils";
 import { setTokenInCookies } from "@/lib/tokenUtils";
-import { ApiErrorResponse } from "@/types/api.types";
-import { ILoginResponse } from "@/types/auth.types";
-import { ILoginPayload, loginZodSchema } from "@/zod/auth.validation";
+import { ApiErrorResponse, ApiResponse } from "@/types/api.types";
+import {
+  IChangePasswordResponse,
+  ILoginResponse,
+  IRegisterResponse,
+} from "@/types/auth.types";
+import {
+  authValidation,
+  IChangePasswordPayload,
+  IForgotPasswordPayload,
+  ILoginUserPayload,
+  IRegisterCustomerPayload,
+  IResetPasswordPayload,
+  IVerifyEmailPayload,
+} from "@/zod/auth.validation";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-const BASE_API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-if (!BASE_API_URL) {
+if (!baseUrl) {
   throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 }
 
@@ -23,7 +36,7 @@ export async function getNewTokensWithRefreshToken(
   refreshToken: string,
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE_API_URL}/auth/refresh-token`, {
+    const res = await fetch(`${baseUrl}/auth/refresh-token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -68,7 +81,7 @@ export async function getUserInfo() {
       return null;
     }
 
-    const res = await fetch(`${BASE_API_URL}/auth/me`, {
+    const res = await fetch(`${baseUrl}/auth/me`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -91,10 +104,11 @@ export async function getUserInfo() {
 }
 
 export const loginUser = async (
-  payload: ILoginPayload,
+  payload: ILoginUserPayload,
   redirectPath?: string,
 ): Promise<ILoginResponse | ApiErrorResponse> => {
-  const parsedPayload = loginZodSchema.safeParse(payload);
+  const parsedPayload =
+    authValidation.loginUserValidationSchema.safeParse(payload);
 
   if (!parsedPayload.success) {
     const firstError = parsedPayload.error.issues[0].message || "Invalid input";
@@ -109,6 +123,10 @@ export const loginUser = async (
       parsedPayload.data,
     );
 
+    if (!response.success) {
+      return response;
+    }
+
     const { accessToken, refreshToken, token, user } = response.data;
     const { role, emailVerified, email } = user;
     await setTokenInCookies("accessToken", accessToken);
@@ -116,7 +134,7 @@ export const loginUser = async (
     await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
 
     if (!emailVerified) {
-      redirect("/verify-email");
+      redirect(`/verify-email?email=${email}`);
     } else {
       // redirect(redirectPath || "/dashboard");
       const targetPath =
@@ -147,6 +165,198 @@ export const loginUser = async (
     return {
       success: false,
       message: `Login failed: ${error.message}`,
+    };
+  }
+};
+
+export const registerUser = async (
+  payload: IRegisterCustomerPayload,
+): Promise<IRegisterResponse | ApiErrorResponse> => {
+  const parsedPayload =
+    authValidation.registerCustomerValidationSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    const firstError = parsedPayload.error.issues[0].message || "Invalid input";
+    return {
+      success: false,
+      message: firstError,
+    };
+  }
+
+  try {
+    const response = await httpClient.post<IRegisterResponse>(
+      "/auth/register",
+      parsedPayload.data,
+    );
+
+    if (!response.success) {
+      return response;
+    }
+
+    const { user } = response.data;
+    const { emailVerified, email } = user;
+
+    if (!emailVerified) {
+      redirect(`/verify-email?email=${email}`);
+    }
+
+    redirect("/login");
+  } catch (error: any) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      typeof error.digest === "string" &&
+      error.digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
+
+    return {
+      success: false,
+      message: `Registration failed: ${error.message}`,
+    };
+  }
+};
+
+export const sendForgotPasswordOtp = async (
+  payload: IForgotPasswordPayload,
+): Promise<ApiResponse<null>> => {
+  const parsedPayload =
+    authValidation.forgetPasswordValidationSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    return {
+      success: false,
+      message: parsedPayload.error.issues[0].message || "Invalid input",
+    };
+  }
+
+  try {
+    return await httpClient.post<null>(
+      "/auth/forget-password",
+      parsedPayload.data,
+    );
+  } catch (error: any) {
+    return {
+      success: false,
+      message: `Request failed: ${error.message}`,
+    };
+  }
+};
+
+export const resetUserPassword = async (
+  payload: IResetPasswordPayload,
+): Promise<ApiResponse<null>> => {
+  const parsedPayload =
+    authValidation.resetPasswordValidationSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    return {
+      success: false,
+      message: parsedPayload.error.issues[0].message || "Invalid input",
+    };
+  }
+
+  try {
+    return await httpClient.post<null>(
+      "/auth/reset-password",
+      parsedPayload.data,
+    );
+  } catch (error: any) {
+    return {
+      success: false,
+      message: `Request failed: ${error.message}`,
+    };
+  }
+};
+
+export const verifyUserEmail = async (
+  payload: IVerifyEmailPayload,
+): Promise<ApiResponse<null>> => {
+  const parsedPayload =
+    authValidation.verifyEmailValidationSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    return {
+      success: false,
+      message: parsedPayload.error.issues[0].message || "Invalid input",
+    };
+  }
+
+  try {
+    return await httpClient.post<null>(
+      "/auth/verify-email",
+      parsedPayload.data,
+    );
+  } catch (error: any) {
+    return {
+      success: false,
+      message: `Request failed: ${error.message}`,
+    };
+  }
+};
+
+export const changeUserPassword = async (
+  payload: IChangePasswordPayload,
+): Promise<ApiResponse<unknown>> => {
+  const parsedPayload =
+    authValidation.changePasswordValidationSchema.safeParse(payload);
+
+  if (!parsedPayload.success) {
+    return {
+      success: false,
+      message: parsedPayload.error.issues[0].message || "Invalid input",
+    };
+  }
+
+  try {
+    const response = await httpClient.post<unknown>(
+      "/auth/change-password",
+      parsedPayload.data,
+    );
+
+    if (!response.success) {
+      return response;
+    }
+
+    await deleteCookie("accessToken");
+    await deleteCookie("refreshToken");
+    await deleteCookie("better-auth.session_token");
+
+    return response;
+  } catch (error: any) {
+    return {
+      success: false,
+      message: `Request failed: ${error.message}`,
+    };
+  }
+};
+
+export const logoutUser = async (): Promise<ApiResponse<unknown>> => {
+  try {
+    return await httpClient.post<unknown>("/auth/logout", {});
+  } catch (error: any) {
+    return {
+      success: false,
+      message: `Request failed: ${error.message}`,
+    };
+  }
+};
+
+export const updateUserProfile = async (
+  formData: FormData,
+): Promise<ApiResponse<unknown>> => {
+  try {
+    return await httpClient.patch<unknown>("/auth/update-me", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  } catch (error: any) {
+    return {
+      success: false,
+      message: `Request failed: ${error.message}`,
     };
   }
 };

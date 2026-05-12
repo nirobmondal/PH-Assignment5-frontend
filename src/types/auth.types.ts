@@ -1,17 +1,42 @@
+import { UserRole } from "@/lib/authUtils";
+
+export enum UserStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}
+
+export interface IRegisterResponse {
+  token: string | null;
+  user: {
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image: string | null;
+    createdAt: string;
+    updatedAt: string;
+    role: UserRole;
+    status: UserStatus;
+    phone: string | null;
+    id: string;
+  };
+}
+
 export interface ILoginResponse {
   token: string;
   accessToken: string;
   refreshToken: string;
   user: {
-    email: string;
     name: string;
-    role: string;
-    image: string;
-    status: string;
+    email: string;
     emailVerified: boolean;
-  };
-  cart: {
+    image: string | null;
+    createdAt: string;
+    updatedAt: string;
+    role: UserRole;
+    status: UserStatus;
+    phone: string | null;
     id: string;
-    cartItems: [];
   };
 }
+
+export interface IChangePasswordResponse extends ILoginResponse {}

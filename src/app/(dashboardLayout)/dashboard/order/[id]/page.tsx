@@ -1,13 +1,7 @@
 import OrderDetailsPage from "@/components/modules/Order/OrderDetailsPage";
 
-interface OrderDetailsRoutePageProps {
-  params: {
-    id: string;
-  };
-}
-
-const OrderDetailsRoutePage = ({ params }: OrderDetailsRoutePageProps) => {
-  return <OrderDetailsPage orderId={params.id} />;
+const OrderDetailsRoutePage = () => {
+  return <OrderDetailsPage />;
 };
 
 export default OrderDetailsRoutePage;

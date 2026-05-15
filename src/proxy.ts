@@ -32,9 +32,6 @@ export async function proxy(request: NextRequest) {
     const accessToken = request.cookies.get("accessToken")?.value;
     const refreshToken = request.cookies.get("refreshToken")?.value;
 
-    console.log("access token: ", accessToken);
-    console.log("refresh token: ", refreshToken);
-
     const decodedAccessToken =
       accessToken &&
       jwtUtils.verifyToken(accessToken, process.env.JWT_ACCESS_SECRET as string)
@@ -131,7 +128,6 @@ export async function proxy(request: NextRequest) {
     // At this point, user has a valid access token
     // Fetch user info to check email verification status
     const userInfo = await getUserInfo();
-    console.log("user information: ", userInfo);
 
     // Email verification required redirect
     if (userInfo && userInfo.emailVerified === false) {

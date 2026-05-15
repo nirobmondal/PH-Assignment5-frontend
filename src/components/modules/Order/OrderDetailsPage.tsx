@@ -6,16 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOrderById } from "@/services/order.services";
 import { IOrder } from "@/types/order.types";
 import OrderDetailsContent from "./OrderDetailsContent";
+import { useParams } from "next/navigation";
 
-interface OrderDetailsPageProps {
-  orderId: string;
-}
-
-const OrderDetailsPage = ({ orderId }: OrderDetailsPageProps) => {
+const OrderDetailsPage = () => {
+  const params = useParams<{ id: string }>();
+  const orderId = params.id;
   const { data, isLoading, error } = useQuery({
     queryKey: ["order", orderId],
     queryFn: async () => {
       const response = await getOrderById(orderId);
+      console.log("Order response: ", response);
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch order");
       }

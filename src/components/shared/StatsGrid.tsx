@@ -1,16 +1,14 @@
 "use client";
 
-import { StatsCard } from "./StatsCard";
+import { LucideIcon } from "lucide-react";
+import StatsCard from "./StatsCard";
 
 export interface StatItem {
   label: string;
   value: string | number;
-  icon?: React.ReactNode;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-  };
-  color?: "blue" | "green" | "purple" | "orange" | "red";
+  icon: LucideIcon;
+  description?: string;
+  className?: string;
 }
 
 interface StatsGridProps {
@@ -32,11 +30,11 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats, columns = 4 }) => {
       {stats.map((stat, index) => (
         <StatsCard
           key={index}
-          label={stat.label}
+          title={stat.label}
           value={stat.value}
           icon={stat.icon}
-          trend={stat.trend}
-          color={stat.color}
+          description={stat.description}
+          className={stat.className}
         />
       ))}
     </div>

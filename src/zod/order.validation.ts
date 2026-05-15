@@ -25,7 +25,8 @@ export const createOrderSchema = z.object({
     .string()
     .trim()
     .max(500, "Note must be at most 500 characters")
-    .optional(),
+    .optional()
+    .nullable(),
 });
 
 export const updateOrderStatusSchema = z.object({

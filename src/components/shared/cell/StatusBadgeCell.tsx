@@ -1,9 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-
-export enum UserStatus {
-  ACTIVE = "ACTIVE",
-  BANNED = "BANNED",
-}
+import { UserStatus } from "@/types/auth.types";
 
 interface IStatusBadgeCellProps {
   status: UserStatus;

@@ -1,36 +1,46 @@
-import { getIconComponent } from "@/lib/iconMapper";
 import { cn } from "@/lib/utils";
-import { createElement } from "react";
+import { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface StatsCardProps {
   title: string;
   value: string | number;
-  iconName: string;
+  icon: LucideIcon;
   description?: string;
   className?: string;
+  iconClassName?: string;
 }
 
 const StatsCard = ({
   title,
   value,
-  iconName,
+  icon: Icon,
   description,
   className,
+  iconClassName,
 }: StatsCardProps) => {
   return (
-    <Card className={cn("hover:shadow-md transition-shadow", className)}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-          {createElement(getIconComponent(iconName), { className: "w-6 h-6" })}
+    <Card
+      className={cn("hover:shadow-lg transition-all duration-200", className)}
+    >
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {title}
+        </CardTitle>
+        <div
+          className={cn(
+            "h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary",
+            iconClassName,
+          )}
+        >
+          <Icon className="w-5 h-5" />
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-1">
-        <div className="text-2xl font-bold">{value}</div>
+      <CardContent className="space-y-2">
+        <div className="text-3xl font-bold tracking-tight">{value}</div>
         {description && (
-          <p className="text-xs font-medium text-muted-foreground">
+          <p className="text-xs text-muted-foreground font-medium">
             {description}
           </p>
         )}

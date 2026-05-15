@@ -28,7 +28,7 @@ export const getCommonNavItems = (role: UserRole): NavSection[] => {
       items: [
         {
           title: "Change Password",
-          href: "change-password",
+          href: "/change-password",
           icon: "Settings",
         },
       ],
@@ -52,7 +52,7 @@ export const sellerNavItems: NavSection[] = [
     items: [
       {
         title: "Get Orders",
-        href: "/seller/dashboard/order",
+        href: "/seller/dashboard/manage-order",
         icon: "ClipboardList",
       },
     ],

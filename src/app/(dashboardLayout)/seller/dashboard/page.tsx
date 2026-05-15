@@ -1,3 +1,5 @@
+import SellerDashboardContent from "@/components/modules/Dashboard/SellerDashboardContent";
+
 export default function SellerDashboardPage() {
-  return <div>Seller dashboard content</div>;
+  return <SellerDashboardContent />;
 }

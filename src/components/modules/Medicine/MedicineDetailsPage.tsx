@@ -1,14 +1,17 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Star } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Star } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { addToCart } from "@/services/cart.services";
 import { getMedicineById } from "@/services/medicine.services";
 import { MedicineWithRelations } from "@/types/medicine.types";
 
@@ -20,9 +23,21 @@ const formatPrice = (value: number | string) => {
   return `$${numericValue}`;
 };
 
+// const formatRating = (value: number | string | undefined) => {
+//   const numericValue = typeof value === "string" ? Number(value) : value;
+//   if (!Number.isFinite(numericValue)) {
+//     return "0";
+//   }
+//   const rounded = Math.round(numericValue * 10) / 10;
+//   return String(rounded);
+// };
+
 const MedicineDetailsPage = () => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useParams<{ id: string }>();
   const medicineId = params?.id;
+  const [quantity, setQuantity] = useState(1);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["medicine-details", medicineId],
@@ -37,6 +52,22 @@ const MedicineDetailsPage = () => {
       return response.data as MedicineWithRelations;
     },
     enabled: Boolean(medicineId),
+  });
+
+  const addToCartMutation = useMutation({
+    mutationFn: addToCart,
+    onSuccess: (response) => {
+      if (!response.success) {
+        toast.error(response.message || "Failed to add to cart");
+        return;
+      }
+      toast.success("Added to cart");
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      router.refresh();
+    },
+    onError: () => {
+      toast.error("Failed to add to cart");
+    },
   });
 
   if (isLoading) {
@@ -59,7 +90,10 @@ const MedicineDetailsPage = () => {
     );
   }
 
-  const sellerName = data.seller?.shopName || data.seller?.name || "";
+  const sellerName = data.seller.shopName;
+  const maxQuantity =
+    Number.isFinite(data.stock) && data.stock > 0 ? data.stock : 1;
+  const safeQuantity = Math.min(Math.max(quantity, 1), maxQuantity);
 
   return (
     <section className="container mx-auto px-4 py-10">
@@ -108,9 +142,7 @@ const MedicineDetailsPage = () => {
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4 text-amber-500" />
                 <span className="font-semibold text-foreground">
-                  {Number.isFinite(data.avgRating)
-                    ? data.avgRating.toFixed(1)
-                    : "-"}
+                  {data.avgRating}
                 </span>
                 <span className="text-muted-foreground">
                   ({Number.isFinite(data.reviewCount) ? data.reviewCount : 0})
@@ -153,6 +185,52 @@ const MedicineDetailsPage = () => {
                 <span className="font-medium text-foreground">
                   {sellerName || "-"}
                 </span>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-dashed p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                    disabled={safeQuantity <= 1}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <div className="min-w-10 rounded-md border px-3 py-2 text-center text-sm font-semibold">
+                    {safeQuantity}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() =>
+                      setQuantity((prev) => Math.min(maxQuantity, prev + 1))
+                    }
+                    disabled={safeQuantity >= maxQuantity}
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <Button
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                  onClick={() =>
+                    addToCartMutation.mutate({
+                      medicineId: data.id,
+                      quantity: safeQuantity,
+                    })
+                  }
+                  disabled={!data.isAvailable || addToCartMutation.isPending}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Add to cart
+                </Button>
               </div>
             </div>
           </CardContent>

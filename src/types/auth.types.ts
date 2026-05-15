@@ -2,11 +2,10 @@ import { UserRole } from "@/lib/authUtils";
 
 export enum UserStatus {
   ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
+  BANNED = "BANNED",
 }
 
 export interface IRegisterResponse {
-  token: string | null;
   user: {
     name: string;
     email: string;
@@ -22,7 +21,6 @@ export interface IRegisterResponse {
 }
 
 export interface ILoginResponse {
-  token: string;
   accessToken: string;
   refreshToken: string;
   user: {

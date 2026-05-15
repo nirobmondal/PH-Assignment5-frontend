@@ -64,7 +64,7 @@ const updateUserValidationSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(250, "Name can be at most 250 characters"),
-  phone: z.string().trim().min(1).optional(),
+  phone: z.string().trim().optional(),
 });
 
 export type IRegisterCustomerPayload = z.infer<

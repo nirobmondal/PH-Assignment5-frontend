@@ -1,63 +1,26 @@
-"use client";
-import Link from "next/link";
-import { Button } from "../ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "../ui/sheet";
-import { Menu } from "lucide-react";
+import { getCart } from "@/services/cart.services";
+import { getUserInfo } from "@/services/auth.services";
+import { UserRole } from "@/lib/authUtils";
+import { ICartResponse } from "@/types/cart.types";
+import { IUserResponse } from "@/types/user.types";
+import PublicNavbarContent from "./PublicNavbarContent";
 
-const PublicNavbar = () => {
-  const navItems = [
-    { href: "/", label: "Home" },
-    { href: "/medicine", label: "Medicine" },
-  ];
+const PublicNavbar = async () => {
+  const userInfo = (await getUserInfo()) as IUserResponse | null;
+  let cartCount = 0;
 
-  return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur  dark:bg-background/95">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold text-primary">PH Doc</span>
-        </Link>
+  if (userInfo?.role === UserRole.CUSTOMER) {
+    const cartResponse = await getCart();
+    if (cartResponse?.success) {
+      const cart = cartResponse.data as ICartResponse;
+      cartCount = cart?.cartItems?.reduce(
+        (total, item) => total + item.quantity,
+        0,
+      );
+    }
+  }
 
-        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          {navItems.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-foreground hover:text-primary transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Mobile Menu */}
-
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline">
-                {" "}
-                <Menu />{" "}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-4">
-              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-              <nav className="flex flex-col space-y-4 mt-8">
-                {navItems.map((link) => (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    className="text-lg font-medium"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-    </header>
-  );
+  return <PublicNavbarContent userInfo={userInfo} cartCount={cartCount} />;
 };
 
 export default PublicNavbar;

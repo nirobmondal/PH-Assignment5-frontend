@@ -1,89 +1,137 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { Star } from "lucide-react";
+"use client";
 
-const featuredMedicines = [
-  {
-    name: "Napa 500",
-    seller: "Green Pharmacy",
-    price: 18,
-    rating: 4.8,
-    badge: "Best seller",
-  },
-  {
-    name: "Vitamin C+",
-    seller: "Nature Life",
-    price: 28,
-    rating: 4.7,
-    badge: "High demand",
-  },
-  {
-    name: "Antacid Relief",
-    seller: "Wellness Hub",
-    price: 24,
-    rating: 4.9,
-    badge: "Editor's pick",
-  },
-];
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { ShoppingCart } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getAllMedicines } from "@/services/medicine.services";
+import {
+  IMedicineListResponse,
+  MedicineWithRelations,
+} from "@/types/medicine.types";
+
+const formatPrice = (value: number | string) => {
+  const numericValue = typeof value === "string" ? Number(value) : value;
+  if (!Number.isFinite(numericValue)) {
+    return "-";
+  }
+  return `BDT ${numericValue}`;
+};
 
 const FeaturedMedicines = () => {
+  const {
+    data: medicineResponse,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["featured-medicines"],
+    queryFn: async () => {
+      const response = await getAllMedicines("isFeatured=true");
+      if (!response.success) {
+        throw new Error(
+          response.message || "Failed to load featured medicines",
+        );
+      }
+      return response.data as IMedicineListResponse;
+    },
+  });
+
+  const medicines = medicineResponse?.data ?? [];
+
   return (
-    <section className="container mx-auto px-4">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">
-            Featured medicines
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            Put the strongest products front and center.
+    <section className="relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(14,116,144,0.12),_transparent_55%)]" />
+      <div className="container relative mx-auto px-4">
+        <div className="mb-8">
+          <h2 className="font-heading text-3xl font-semibold text-foreground md:text-4xl">
+            Featured Medicine
           </h2>
         </div>
-        <Button asChild variant="outline" className="hidden md:inline-flex">
-          <Link href="/medicine">View all</Link>
-        </Button>
-      </div>
 
-      <div className="grid gap-5 md:grid-cols-3">
-        {featuredMedicines.map((medicine) => (
-          <Card
-            key={medicine.name}
-            className="overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="h-44 bg-[linear-gradient(135deg,_rgba(16,185,129,0.16),_rgba(236,253,245,1))]" />
-            <CardHeader>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <Badge className="mb-2 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                    {medicine.badge}
-                  </Badge>
-                  <CardTitle className="text-lg">{medicine.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {medicine.seller}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 text-amber-500">
-                  <Star className="h-4 w-4 fill-current" />
-                  <span className="text-sm font-medium text-foreground">
-                    {medicine.rating}
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">From</p>
-                <p className="text-2xl font-semibold text-emerald-700">
-                  ${medicine.price}
-                </p>
-              </div>
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
-                <Link href="/medicine">View</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+        {error ? (
+          <div className="rounded-2xl border border-dashed bg-white/80 p-8 text-center text-sm text-muted-foreground">
+            Unable to load featured medicines right now.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+            {isLoading
+              ? Array.from({ length: 8 }).map((_, index) => (
+                  <Card
+                    key={`featured-skeleton-${index}`}
+                    className="overflow-hidden border-muted bg-white"
+                  >
+                    <Skeleton className="h-32 w-full" />
+                    <CardContent className="space-y-3 p-4">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </CardContent>
+                    <CardFooter className="p-4 pt-0">
+                      <Skeleton className="h-10 w-full" />
+                    </CardFooter>
+                  </Card>
+                ))
+              : medicines.map((medicine: MedicineWithRelations) => (
+                  <Card
+                    key={medicine.id}
+                    className="group overflow-hidden border-emerald-100/70 bg-white/90 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  >
+                    <div className="relative h-36 w-full bg-[linear-gradient(135deg,_rgba(14,116,144,0.12),_rgba(236,254,255,1))]">
+                      {medicine.imageUrl ? (
+                        <img
+                          src={medicine.imageUrl}
+                          alt={medicine.name}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                          No image
+                        </div>
+                      )}
+                    </div>
+
+                    <CardContent className="space-y-3 p-4">
+                      <div className="space-y-1">
+                        <h3 className="line-clamp-1 text-lg font-semibold text-foreground">
+                          {medicine.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {medicine.category?.name ?? ""}
+                        </p>
+                      </div>
+
+                      <div className="text-sm font-semibold text-emerald-700">
+                        {formatPrice(medicine.price)}
+                      </div>
+                    </CardContent>
+
+                    <CardFooter className="p-4 pt-0">
+                      <Button
+                        asChild
+                        className="w-full bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        <Link
+                          href={`/medicine/${medicine.id}`}
+                          className="flex items-center justify-center gap-2"
+                        >
+                          <ShoppingCart className="h-4 w-4" />
+                          Add to cart
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+          </div>
+        )}
+
+        {!isLoading && !error && medicines.length === 0 && (
+          <div className="mt-6 rounded-2xl border border-dashed bg-white/80 p-8 text-center text-sm text-muted-foreground">
+            No featured medicines available right now.
+          </div>
+        )}
       </div>
     </section>
   );

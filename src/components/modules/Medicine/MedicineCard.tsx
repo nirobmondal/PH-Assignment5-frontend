@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { MedicineWithRelations } from "@/types/medicine.types";
-import { Info, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
 
 const formatPrice = (value: number | string) => {
@@ -93,23 +93,14 @@ const MedicineCard = ({ medicine }: MedicineCardProps) => {
         </div>
       </CardContent>
 
-      <CardFooter className="flex items-center gap-2 p-4 pt-0">
-        <Button asChild className="flex-1" variant="outline">
+      <CardFooter className="p-4 pt-0">
+        <Button asChild className="w-full" variant="outline">
           <Link
             href={`/medicine/${medicine.id}`}
             className="inline-flex items-center justify-center gap-2"
           >
             <ShoppingCart className="h-4 w-4" />
             Add to cart
-          </Link>
-        </Button>
-        <Button asChild className="flex-1 bg-emerald-600 hover:bg-emerald-700">
-          <Link
-            href={`/medicine/${medicine.id}`}
-            className="inline-flex items-center justify-center gap-2"
-          >
-            <Info className="h-4 w-4" />
-            Details
           </Link>
         </Button>
       </CardFooter>

@@ -23,11 +23,12 @@ export interface MedicineWithRelations extends Medicine {
   category: {
     id: string;
     name: string;
+    description?: string;
   };
   manufacturer: {
     id: string;
     name: string;
-    country: string;
+    country?: string;
   };
   seller: {
     id: string;

@@ -9,11 +9,7 @@ import { httpClient } from "@/lib/axios/httpClient";
 import { deleteCookie } from "@/lib/cookieUtils";
 import { setTokenInCookies } from "@/lib/tokenUtils";
 import { ApiErrorResponse, ApiResponse } from "@/types/api.types";
-import {
-  IChangePasswordResponse,
-  ILoginResponse,
-  IRegisterResponse,
-} from "@/types/auth.types";
+import { ILoginResponse, IRegisterResponse } from "@/types/auth.types";
 import {
   authValidation,
   IChangePasswordPayload,
@@ -50,7 +46,7 @@ export async function getNewTokensWithRefreshToken(
 
     const { data } = await res.json();
 
-    const { accessToken, refreshToken: newRefreshToken, token } = data;
+    const { accessToken, refreshToken: newRefreshToken } = data;
 
     if (accessToken) {
       await setTokenInCookies("accessToken", accessToken);
@@ -58,10 +54,6 @@ export async function getNewTokensWithRefreshToken(
 
     if (newRefreshToken) {
       await setTokenInCookies("refreshToken", newRefreshToken);
-    }
-
-    if (token) {
-      await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
     }
 
     return true;
@@ -75,7 +67,7 @@ export async function getUserInfo() {
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("accessToken")?.value;
-    const sessionToken = cookieStore.get("better-auth.session_token")?.value;
+    // const sessionToken = cookieStore.get("better-auth.session_token")?.value;
 
     if (!accessToken) {
       return null;
@@ -85,7 +77,7 @@ export async function getUserInfo() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Cookie: `accessToken=${accessToken}; better-auth.session_token=${sessionToken}`,
+        Cookie: `accessToken=${accessToken}`,
       },
     });
 
@@ -126,12 +118,10 @@ export const loginUser = async (
     if (!response.success) {
       return response;
     }
-
-    const { accessToken, refreshToken, token, user } = response.data;
+    const { accessToken, refreshToken, user } = response.data;
     const { role, emailVerified, email } = user;
     await setTokenInCookies("accessToken", accessToken);
     await setTokenInCookies("refreshToken", refreshToken);
-    await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
 
     if (!emailVerified) {
       redirect(`/verify-email?email=${email}`);
@@ -271,6 +261,30 @@ export const resetUserPassword = async (
   }
 };
 
+export const googleLogin = async (
+  idToken: string,
+): Promise<ApiResponse<ILoginResponse>> => {
+  try {
+    const response = await httpClient.post<ILoginResponse>(
+      "/auth/google-login",
+      { idToken },
+    );
+    if (!response.success) {
+      return response;
+    }
+    const { accessToken, refreshToken, user } = response.data;
+    await setTokenInCookies("accessToken", accessToken);
+    await setTokenInCookies("refreshToken", refreshToken);
+
+    return response;
+  } catch (error: any) {
+    return {
+      success: false,
+      message: `Google login failed: ${error.message}`,
+    };
+  }
+};
+
 export const verifyUserEmail = async (
   payload: IVerifyEmailPayload,
 ): Promise<ApiResponse<null>> => {
@@ -322,7 +336,6 @@ export const changeUserPassword = async (
 
     await deleteCookie("accessToken");
     await deleteCookie("refreshToken");
-    await deleteCookie("better-auth.session_token");
 
     return response;
   } catch (error: any) {
@@ -335,7 +348,10 @@ export const changeUserPassword = async (
 
 export const logoutUser = async (): Promise<ApiResponse<unknown>> => {
   try {
-    return await httpClient.post<unknown>("/auth/logout", {});
+    const response = await httpClient.post<unknown>("/auth/logout", {});
+    await deleteCookie("accessToken");
+    await deleteCookie("refreshToken");
+    return response;
   } catch (error: any) {
     return {
       success: false,

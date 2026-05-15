@@ -126,7 +126,9 @@ const OrderDetailsContent = ({ order }: OrderDetailsContentProps) => {
         <div className="space-y-1">
           <p className="text-sm font-semibold">Transaction</p>
           <p className="text-sm text-muted-foreground">
-            {order.payment?.transactionId || "Not available"}
+            {order.paymentStatus === "PAID" && order.payment?.transactionId
+              ? order.payment.transactionId
+              : "Not available"}
           </p>
         </div>
       </div>

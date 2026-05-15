@@ -111,7 +111,15 @@ const OrderCheckoutPage = () => {
 
           {!isLoading && !error && !hasItems && (
             <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-              Your cart is empty. Add items before checkout.
+              <p>Your cart is empty. Add items before checkout.</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => router.push("/dashboard/cart")}
+              >
+                Go to cart
+              </Button>
             </div>
           )}
 
@@ -152,71 +160,74 @@ const OrderCheckoutPage = () => {
           <CardTitle>Shipping Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input
-                placeholder="Full name"
-                value={formValues.shippingName}
-                onChange={(event) =>
-                  setFormValues((prev) => ({
-                    ...prev,
-                    shippingName: event.target.value,
-                  }))
-                }
-                required
-              />
-              <Input
-                placeholder="Phone number"
-                value={formValues.shippingPhone}
-                onChange={(event) =>
-                  setFormValues((prev) => ({
-                    ...prev,
-                    shippingPhone: event.target.value,
-                  }))
-                }
-                required
-              />
+          {!hasItems ? (
+            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              Add items to your cart to enter shipping details.
             </div>
-            <Input
-              placeholder="Shipping address"
-              value={formValues.shippingAddress}
-              onChange={(event) =>
-                setFormValues((prev) => ({
-                  ...prev,
-                  shippingAddress: event.target.value,
-                }))
-              }
-              required
-            />
-            <Input
-              placeholder="City"
-              value={formValues.shippingCity}
-              onChange={(event) =>
-                setFormValues((prev) => ({
-                  ...prev,
-                  shippingCity: event.target.value,
-                }))
-              }
-              required
-            />
-            <Textarea
-              placeholder="Note (optional)"
-              value={formValues.note}
-              onChange={(event) =>
-                setFormValues((prev) => ({
-                  ...prev,
-                  note: event.target.value,
-                }))
-              }
-            />
+          ) : (
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input
+                  placeholder="Full name"
+                  value={formValues.shippingName}
+                  onChange={(event) =>
+                    setFormValues((prev) => ({
+                      ...prev,
+                      shippingName: event.target.value,
+                    }))
+                  }
+                  required
+                />
+                <Input
+                  placeholder="Phone number"
+                  value={formValues.shippingPhone}
+                  onChange={(event) =>
+                    setFormValues((prev) => ({
+                      ...prev,
+                      shippingPhone: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <Input
+                placeholder="Shipping address"
+                value={formValues.shippingAddress}
+                onChange={(event) =>
+                  setFormValues((prev) => ({
+                    ...prev,
+                    shippingAddress: event.target.value,
+                  }))
+                }
+                required
+              />
+              <Input
+                placeholder="City"
+                value={formValues.shippingCity}
+                onChange={(event) =>
+                  setFormValues((prev) => ({
+                    ...prev,
+                    shippingCity: event.target.value,
+                  }))
+                }
+                required
+              />
+              <Textarea
+                placeholder="Note (optional)"
+                value={formValues.note}
+                onChange={(event) =>
+                  setFormValues((prev) => ({
+                    ...prev,
+                    note: event.target.value,
+                  }))
+                }
+              />
 
-            <Button
-              type="submit"
-              disabled={!hasItems || orderMutation.isPending}
-            >
-              Initiate order with pay later
-            </Button>
-          </form>
+              <Button type="submit" disabled={orderMutation.isPending}>
+                Initiate order with pay later
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

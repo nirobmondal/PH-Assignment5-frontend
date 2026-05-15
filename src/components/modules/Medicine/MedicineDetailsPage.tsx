@@ -1,19 +1,36 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Minus, Plus, ShoppingCart, Star } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import ReviewDeleteDialog from "@/components/modules/Review/ReviewDeleteDialog";
+import ReviewEditDialog from "@/components/modules/Review/ReviewEditDialog";
+import ReviewForm from "@/components/modules/Review/ReviewForm";
+import ReviewList from "@/components/modules/Review/ReviewList";
+import ReviewStars from "@/components/modules/Review/ReviewStars";
+import { UserRole } from "@/lib/authUtils";
 import { addToCart } from "@/services/cart.services";
+import { getUserInfo } from "@/services/auth.services";
 import { getMedicineById } from "@/services/medicine.services";
+import { getOrders } from "@/services/order.services";
+import {
+  createReview,
+  deleteReview,
+  getReviewsByMedicineId,
+  updateReview,
+} from "@/services/review.services";
 import { MedicineWithRelations } from "@/types/medicine.types";
+import { IOrderResponse, OrderStatus } from "@/types/order.types";
+import { IReviewResponse } from "@/types/review.types";
+import { IUserResponse } from "@/types/user.types";
 
 const formatPrice = (value: number | string) => {
   const numericValue = typeof value === "string" ? Number(value) : value;
@@ -23,14 +40,20 @@ const formatPrice = (value: number | string) => {
   return `$${numericValue}`;
 };
 
-// const formatRating = (value: number | string | undefined) => {
-//   const numericValue = typeof value === "string" ? Number(value) : value;
-//   if (!Number.isFinite(numericValue)) {
-//     return "0";
-//   }
-//   const rounded = Math.round(numericValue * 10) / 10;
-//   return String(rounded);
-// };
+const formatRating = (value: number) => {
+  if (!Number.isFinite(value)) {
+    return "0.0";
+  }
+  return value.toFixed(1);
+};
+
+const buildDeliveredOrderQueryString = () => {
+  const params = new URLSearchParams();
+  params.set("page", "1");
+  params.set("limit", "50");
+  params.set("status", OrderStatus.DELIVERED);
+  return params.toString();
+};
 
 const MedicineDetailsPage = () => {
   const router = useRouter();
@@ -38,6 +61,8 @@ const MedicineDetailsPage = () => {
   const params = useParams<{ id: string }>();
   const medicineId = params?.id;
   const [quantity, setQuantity] = useState(1);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["medicine-details", medicineId],
@@ -70,6 +95,148 @@ const MedicineDetailsPage = () => {
     },
   });
 
+  const { data: userInfo } = useQuery({
+    queryKey: ["user-info"],
+    queryFn: getUserInfo,
+  });
+
+  const {
+    data: reviewResponse,
+    isLoading: isReviewLoading,
+    error: reviewError,
+  } = useQuery({
+    queryKey: ["medicine-reviews", medicineId],
+    queryFn: async () => {
+      if (!medicineId) {
+        throw new Error("Missing medicine id");
+      }
+      const response = await getReviewsByMedicineId(medicineId);
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch reviews");
+      }
+      return response.data as IReviewResponse[];
+    },
+    enabled: Boolean(medicineId),
+  });
+
+  const reviews = reviewResponse ?? [];
+
+  const user = userInfo as IUserResponse | null;
+  const isCustomer = user?.role === UserRole.CUSTOMER;
+
+  const {
+    data: deliveredOrders,
+    isLoading: isOrdersLoading,
+    error: ordersError,
+  } = useQuery({
+    queryKey: ["delivered-orders", medicineId],
+    queryFn: async () => {
+      const response = await getOrders(buildDeliveredOrderQueryString());
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch orders");
+      }
+      return response.data as IOrderResponse;
+    },
+    enabled: Boolean(medicineId) && isCustomer,
+  });
+
+  const reviewableOrderItem = useMemo(() => {
+    if (!deliveredOrders?.data || !medicineId) {
+      return null;
+    }
+
+    for (const order of deliveredOrders.data) {
+      for (const sellerOrder of order.sellerOrders) {
+        for (const item of sellerOrder.items) {
+          if (item.medicine?.id === medicineId) {
+            return item;
+          }
+        }
+      }
+    }
+
+    return null;
+  }, [deliveredOrders?.data, medicineId]);
+
+  const userReview = useMemo(() => {
+    if (!user || !reviews.length) {
+      return null;
+    }
+
+    return reviews.find((review) => review.customer?.id === user.id) ?? null;
+  }, [reviews, user]);
+
+  const canCreateReview =
+    isCustomer && Boolean(reviewableOrderItem) && !userReview;
+
+  const createReviewMutation = useMutation({
+    mutationFn: createReview,
+    onSuccess: (response) => {
+      if (!response.success) {
+        toast.error(response.message || "Failed to submit review");
+        return;
+      }
+      toast.success("Review submitted");
+      queryClient.invalidateQueries({
+        queryKey: ["medicine-reviews", medicineId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["medicine-details", medicineId],
+      });
+    },
+    onError: () => {
+      toast.error("Failed to submit review");
+    },
+  });
+
+  const updateReviewMutation = useMutation({
+    mutationFn: async ({
+      reviewId,
+      payload,
+    }: {
+      reviewId: string;
+      payload: { rating?: number; comment?: string };
+    }) => updateReview(reviewId, payload),
+    onSuccess: (response) => {
+      if (!response.success) {
+        toast.error(response.message || "Failed to update review");
+        return;
+      }
+      toast.success("Review updated");
+      queryClient.invalidateQueries({
+        queryKey: ["medicine-reviews", medicineId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["medicine-details", medicineId],
+      });
+      setIsEditOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to update review");
+    },
+  });
+
+  const deleteReviewMutation = useMutation({
+    mutationFn: deleteReview,
+    onSuccess: (response) => {
+      if (!response.success) {
+        toast.error(response.message || "Failed to delete review");
+        return;
+      }
+      toast.success("Review deleted");
+      queryClient.invalidateQueries({
+        queryKey: ["medicine-reviews", medicineId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["medicine-details", medicineId],
+      });
+      setIsDeleteOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to delete review");
+    },
+  });
+
   if (isLoading) {
     return (
       <section className="container mx-auto px-4 py-10">
@@ -94,6 +261,8 @@ const MedicineDetailsPage = () => {
   const maxQuantity =
     Number.isFinite(data.stock) && data.stock > 0 ? data.stock : 1;
   const safeQuantity = Math.min(Math.max(quantity, 1), maxQuantity);
+  const avgRating = Number.isFinite(data.avgRating) ? data.avgRating : 0;
+  const reviewCount = Number.isFinite(data.reviewCount) ? data.reviewCount : 0;
 
   return (
     <section className="container mx-auto px-4 py-10">
@@ -140,13 +309,11 @@ const MedicineDetailsPage = () => {
 
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-amber-500" />
+                <ReviewStars value={avgRating} />
                 <span className="font-semibold text-foreground">
-                  {data.avgRating}
+                  {formatRating(avgRating)}
                 </span>
-                <span className="text-muted-foreground">
-                  ({Number.isFinite(data.reviewCount) ? data.reviewCount : 0})
-                </span>
+                <span className="text-muted-foreground">({reviewCount})</span>
               </div>
               <Badge variant="outline">{data.dosageForm}</Badge>
               <Badge variant="outline">{data.strength}</Badge>
@@ -237,7 +404,148 @@ const MedicineDetailsPage = () => {
         </Card>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+      <div className="mt-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <Card className="border-muted bg-white">
+          <CardContent className="space-y-4 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Customer reviews
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Based on {reviewCount} review{reviewCount !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <ReviewStars value={avgRating} />
+                <span className="text-sm font-semibold text-foreground">
+                  {formatRating(avgRating)}
+                </span>
+              </div>
+            </div>
+
+            <Separator />
+
+            {isReviewLoading && (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Loading reviews...
+              </div>
+            )}
+
+            {reviewError && (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Unable to load reviews.
+              </div>
+            )}
+
+            {!isReviewLoading && !reviewError && (
+              <ReviewList
+                reviews={reviews}
+                emptyMessage="Be the first to review."
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-muted bg-white">
+          <CardContent className="space-y-4 p-6">
+            {!user && (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                <p>Log in to share your review.</p>
+                <Button asChild variant="outline" size="sm" className="mt-3">
+                  <Link href="/login">Go to login</Link>
+                </Button>
+              </div>
+            )}
+
+            {user && !isCustomer && (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Only customers can submit reviews.
+              </div>
+            )}
+
+            {user && isCustomer && isOrdersLoading && (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Checking your delivered orders...
+              </div>
+            )}
+
+            {user && isCustomer && ordersError && (
+              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Unable to verify your order history.
+              </div>
+            )}
+
+            {user &&
+              isCustomer &&
+              !isOrdersLoading &&
+              !ordersError &&
+              userReview && (
+                <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-foreground">
+                      Your review
+                    </p>
+                    <ReviewStars value={userReview.rating} />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {userReview.comment || "No comment provided."}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsEditOpen(true)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setIsDeleteOpen(true)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+            {user &&
+              isCustomer &&
+              !isOrdersLoading &&
+              !ordersError &&
+              !userReview &&
+              !reviewableOrderItem && (
+                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  Order and receive this medicine to leave a review.
+                </div>
+              )}
+
+            {user &&
+              isCustomer &&
+              !isOrdersLoading &&
+              !ordersError &&
+              canCreateReview && (
+                <ReviewForm
+                  onSubmit={({ rating, comment }) => {
+                    if (!reviewableOrderItem) {
+                      toast.error("No delivered order found for review");
+                      return;
+                    }
+                    createReviewMutation.mutate({
+                      orderItemId: reviewableOrderItem.id,
+                      rating,
+                      comment,
+                    });
+                  }}
+                  isSubmitting={createReviewMutation.isPending}
+                />
+              )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-10 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <Card className="border-muted bg-white">
           <CardContent className="space-y-3 p-6">
             <h2 className="text-lg font-semibold text-foreground">
@@ -282,6 +590,35 @@ const MedicineDetailsPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ReviewEditDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        review={userReview}
+        isSubmitting={updateReviewMutation.isPending}
+        onSubmit={(payload) => {
+          if (!userReview) {
+            return;
+          }
+          updateReviewMutation.mutate({
+            reviewId: userReview.id,
+            payload,
+          });
+        }}
+      />
+
+      <ReviewDeleteDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        reviewTitle={data.name}
+        isDeleting={deleteReviewMutation.isPending}
+        onConfirm={() => {
+          if (!userReview) {
+            return;
+          }
+          deleteReviewMutation.mutate(userReview.id);
+        }}
+      />
     </section>
   );
 };

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   cancelOrder,
-  getOrdersByParams,
+  getOrders,
   placeOrderWithPayment,
 } from "@/services/order.services";
 import {
@@ -31,22 +31,42 @@ import {
   getOrderShortId,
 } from "./orderUtils";
 import { OrderStatusBadge, PaymentStatusBadge } from "./OrderBadges";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const buildQueryString = (
   pagination: PaginationState,
   searchTerm: string,
   filters: DataTableFilterValues,
 ) => {
-  return {
-    page: pagination.pageIndex + 1,
-    limit: pagination.pageSize,
-    searchTerm: searchTerm.trim() || undefined,
-    status: typeof filters.status === "string" ? filters.status : undefined,
-    paymentStatus:
-      typeof filters.paymentStatus === "string"
-        ? filters.paymentStatus
-        : undefined,
-  };
+  const params = new URLSearchParams();
+  params.set("page", String(pagination.pageIndex + 1));
+  params.set("limit", String(pagination.pageSize));
+
+  if (searchTerm.trim()) {
+    params.set("searchTerm", searchTerm.trim());
+  }
+
+  const statusValue = filters.status;
+  if (typeof statusValue === "string" && statusValue.length > 0) {
+    params.set("status", statusValue);
+  }
+
+  const paymentValue = filters.paymentStatus;
+  if (typeof paymentValue === "string" && paymentValue.length > 0) {
+    params.set("paymentStatus", paymentValue);
+  }
+
+  return params.toString();
 };
 
 const OrderListPage = () => {
@@ -58,7 +78,7 @@ const OrderListPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<DataTableFilterValues>({});
 
-  const queryParams = useMemo(
+  const queryString = useMemo(
     () => buildQueryString(pagination, searchTerm, filters),
     [pagination, searchTerm, filters],
   );
@@ -68,9 +88,9 @@ const OrderListPage = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["customer-orders", queryParams],
+    queryKey: ["customer-orders", queryString],
     queryFn: async () => {
-      const response = await getOrdersByParams(queryParams);
+      const response = await getOrders(queryString);
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch orders");
       }
@@ -146,38 +166,68 @@ const OrderListPage = () => {
         header: "Actions",
         cell: ({ row }) => {
           const order = row.original;
+          const isPending = order.status === OrderStatus.PENDING;
           const canPay =
-            order.status === OrderStatus.PENDING &&
-            order.paymentStatus === PaymentStatus.PENDING;
-          const canCancel = order.status === OrderStatus.PENDING;
+            isPending && order.paymentStatus === PaymentStatus.PENDING;
+          const canCancel = isPending;
+          const canTrack = [
+            OrderStatus.PLACED,
+            OrderStatus.PROCESSING,
+            OrderStatus.SHIPPED,
+            OrderStatus.DELIVERED,
+          ].includes(order.status);
 
           return (
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="outline" asChild>
-                <Link href={`/dashboard/order/${order.id}`}>Track</Link>
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => payMutation.mutate(order.id)}
-                disabled={!canPay || payMutation.isPending}
-              >
-                Pay & confirm
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => {
-                  const shouldCancel = window.confirm(
-                    "Cancel this order? This cannot be undone.",
-                  );
-                  if (shouldCancel) {
-                    cancelMutation.mutate(order.id);
-                  }
-                }}
-                disabled={!canCancel || cancelMutation.isPending}
-              >
-                Cancel
-              </Button>
+              {canTrack && (
+                <Button size="sm" variant="outline" asChild>
+                  <Link href={`/dashboard/order/${order.id}`}>Track</Link>
+                </Button>
+              )}
+              {isPending && (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => payMutation.mutate(order.id)}
+                    disabled={!canPay || payMutation.isPending}
+                  >
+                    Pay & confirm
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={!canCancel || cancelMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel order</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Cancel this order? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={cancelMutation.isPending}>
+                          Keep order
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          variant="destructive"
+                          onClick={() => cancelMutation.mutate(order.id)}
+                          disabled={!canCancel || cancelMutation.isPending}
+                        >
+                          {cancelMutation.isPending
+                            ? "Cancelling..."
+                            : "Cancel order"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
             </div>
           );
         },

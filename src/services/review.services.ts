@@ -34,9 +34,11 @@ export const createReview = async (
 
 export const getReviewsByMedicineId = async (
   medicineId: string,
-): Promise<ApiResponse<unknown>> => {
+): Promise<ApiResponse<IReviewResponse[] | ApiErrorResponse>> => {
   try {
-    return await httpClient.get<unknown>(`/review/medicine/${medicineId}`);
+    return await httpClient.get<IReviewResponse[]>(
+      `/review/medicine/${medicineId}`,
+    );
   } catch (error: any) {
     return {
       success: false,
@@ -46,10 +48,10 @@ export const getReviewsByMedicineId = async (
 };
 
 export const getAllReviews = async (): Promise<
-  ApiResponse<IReviewResponse | ApiErrorResponse>
+  ApiResponse<IReviewResponse[] | ApiErrorResponse>
 > => {
   try {
-    return await httpClient.get<IReviewResponse>("/review");
+    return await httpClient.get<IReviewResponse[]>("/review");
   } catch (error: any) {
     return {
       success: false,

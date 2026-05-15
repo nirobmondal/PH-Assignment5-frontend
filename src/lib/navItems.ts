@@ -24,6 +24,16 @@ export const getCommonNavItems = (role: UserRole): NavSection[] => {
       ],
     },
     {
+      title: "Browse Medicines",
+      items: [
+        {
+          title: "Medicines",
+          href: "/medicine",
+          icon: "Pill",
+        },
+      ],
+    },
+    {
       title: "Settings",
       items: [
         {

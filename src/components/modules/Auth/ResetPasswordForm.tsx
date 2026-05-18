@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Mail, KeyRound, Lock } from "lucide-react";
 import { z } from "zod";
 
 import AppField from "@/components/shared/form/AppField";
@@ -61,23 +61,27 @@ const ResetPasswordForm = () => {
   });
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
-        <CardDescription>Enter the OTP and set a new password.</CardDescription>
+    <Card className="w-full max-w-md mx-auto rounded-2xl border border-gray-100 bg-white shadow-xl">
+      <CardHeader className="space-y-2 px-6 pt-8 pb-4 text-center">
+        <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          Reset Password
+        </CardTitle>
+        <CardDescription className="text-sm text-gray-500">
+          Enter the OTP and set a new password.
+        </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="px-6 pb-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-4"
+          className="space-y-5"
           noValidate
         >
-          {/* this field can't edited. implement that */}
+          {/* Email Field (disabled, non-editable) */}
           <form.Field
             name="email"
             validators={{
@@ -86,16 +90,26 @@ const ResetPasswordForm = () => {
             }}
           >
             {(field) => (
-              <AppField
-                field={field}
-                label="Email"
-                type="email"
-                placeholder="you@example.com"
-                disabled
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type="email"
+                    placeholder="you@example.com"
+                    className="pl-9 bg-gray-50"
+                    disabled
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
+          {/* OTP Field */}
           <form.Field
             name="otp"
             validators={{
@@ -103,15 +117,23 @@ const ResetPasswordForm = () => {
             }}
           >
             {(field) => (
-              <AppField
-                field={field}
-                label="OTP"
-                type="text"
-                placeholder="123456"
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">OTP</label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type="text"
+                    placeholder="123456"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
+          {/* New Password Field */}
           <form.Field
             name="newPassword"
             validators={{
@@ -120,41 +142,62 @@ const ResetPasswordForm = () => {
             }}
           >
             {(field) => (
-              <AppField
-                field={field}
-                label="New Password"
-                type={showNewPassword ? "text" : "password"}
-                placeholder="••••••"
-                append={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowNewPassword((prev) => !prev)}
-                  >
-                    {showNewPassword ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
-                  </Button>
-                }
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="••••••"
+                    className="pl-9 pr-10"
+                    append={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowNewPassword((prev) => !prev)}
+                        aria-label={
+                          showNewPassword ? "Hide password" : "Show password"
+                        }
+                        className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    }
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
+          {/* Server Error Alert */}
           {serverError && (
-            <Alert variant="destructive">
-              <AlertDescription>{serverError}</AlertDescription>
+            <Alert
+              variant="destructive"
+              className="rounded-lg border-red-200 bg-red-50"
+            >
+              <AlertDescription className="text-sm text-red-600">
+                {serverError}
+              </AlertDescription>
             </Alert>
           )}
 
+          {/* Submit Button */}
           <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
               <AppSubmitButton
                 isPending={isSubmitting || isPending}
                 pendingLabel="Resetting password..."
                 disabled={!canSubmit}
+                className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-50"
               >
                 Reset Password
               </AppSubmitButton>
@@ -163,9 +206,12 @@ const ResetPasswordForm = () => {
         </form>
       </CardContent>
 
-      <CardFooter className="justify-center border-t pt-4">
-        <div className="text-sm text-muted-foreground">
-          <Link href="/login" className="text-primary hover:underline">
+      <CardFooter className="justify-center border-t border-gray-100 px-6 py-5">
+        <div className="text-sm text-gray-500">
+          <Link
+            href="/login"
+            className="font-semibold text-gray-900 hover:underline underline-offset-4 transition-colors"
+          >
             Back to login
           </Link>
         </div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Mail, LockKeyhole } from "lucide-react";
 
 import AppField from "@/components/shared/form/AppField";
 import AppSubmitButton from "@/components/shared/form/AppSubmitButton";
@@ -44,8 +44,6 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
       setServerError(null);
       try {
         const result = (await mutateAsync(value)) as any;
-        // The loginUser service should return a success flag and message.
-        // Adjust based on your actual service response shape.
         if (!result.success) {
           setServerError(result.message || "Login failed");
         }
@@ -56,15 +54,17 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
   });
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Welcome Back!</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-md mx-auto rounded-2xl border border-gray-100 bg-white shadow-xl">
+      <CardHeader className="space-y-2 px-6 pt-8 pb-4 text-center">
+        <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          Welcome Back!
+        </CardTitle>
+        <CardDescription className="text-sm text-gray-500">
           Please enter your credentials to log in to your Niramoy account.
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="px-6 pb-6">
         {/* Email/Password Form */}
         <form
           onSubmit={(e) => {
@@ -72,7 +72,7 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-4"
+          className="space-y-5"
           noValidate
         >
           <form.Field
@@ -82,12 +82,21 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
             }}
           >
             {(field) => (
-              <AppField
-                field={field}
-                label="Email"
-                type="email"
-                placeholder="you@example.com"
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type="email"
+                    placeholder="you@example.com"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
@@ -98,29 +107,39 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
             }}
           >
             {(field) => (
-              <AppField
-                field={field}
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••"
-                append={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <div className="relative">
+                  <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••"
+                    className="pl-9 pr-10"
+                    append={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                        className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </Button>
                     }
-                  >
-                    {showPassword ? (
-                      <EyeOff className="size-4" aria-hidden="true" />
-                    ) : (
-                      <Eye className="size-4" aria-hidden="true" />
-                    )}
-                  </Button>
-                }
-              />
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
@@ -128,7 +147,7 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
           <div className="text-right">
             <Link
               href="/forgot-password"
-              className="text-sm text-primary hover:underline underline-offset-4"
+              className="font-semibold text-gray-900 hover:underline underline-offset-4 transition-colors"
             >
               Forgot password?
             </Link>
@@ -136,8 +155,13 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
 
           {/* Server Error Alert */}
           {serverError && (
-            <Alert variant="destructive">
-              <AlertDescription>{serverError}</AlertDescription>
+            <Alert
+              variant="destructive"
+              className="rounded-lg border-red-200 bg-red-50"
+            >
+              <AlertDescription className="text-sm text-red-600">
+                {serverError}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -148,7 +172,7 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
                 isPending={isSubmitting || isPending}
                 pendingLabel="Logging in..."
                 disabled={!canSubmit}
-                className="w-full"
+                className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-50"
               >
                 Log In
               </AppSubmitButton>
@@ -159,10 +183,10 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
         {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
+            <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
+            <span className="bg-white px-2 text-gray-500">
               Or continue with
             </span>
           </div>
@@ -172,12 +196,12 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
         <GoogleLoginButton />
       </CardContent>
 
-      <CardFooter className="justify-center border-t pt-4">
-        <p className="text-sm text-muted-foreground">
+      <CardFooter className="justify-center border-t border-gray-100 px-6 py-5">
+        <p className="text-sm text-gray-500">
           Don&apos;t have an account?{" "}
           <Link
             href="/register"
-            className="text-primary font-medium hover:underline underline-offset-4"
+            className="font-semibold text-gray-900 hover:underline underline-offset-4 transition-colors"
           >
             Sign up for free
           </Link>

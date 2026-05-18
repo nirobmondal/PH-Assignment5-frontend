@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock, KeyRound } from "lucide-react";
 
 import AppField from "@/components/shared/form/AppField";
 import AppSubmitButton from "@/components/shared/form/AppSubmitButton";
@@ -77,25 +77,27 @@ export default function ChangePasswordForm() {
   });
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-md">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold">Change Password</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-md mx-auto rounded-2xl border border-gray-100 bg-white shadow-xl">
+      <CardHeader className="space-y-2 px-6 pt-8 pb-4">
+        <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          Change Password
+        </CardTitle>
+        <CardDescription className="text-sm text-gray-500">
           Update your password to keep your account secure.
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="px-6 pb-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-4"
+          className="space-y-5"
           noValidate
         >
-          {/* Current Password */}
+          {/* Current Password Field */}
           <form.Field
             name="currentPassword"
             validators={{
@@ -105,31 +107,43 @@ export default function ChangePasswordForm() {
             }}
           >
             {(field) => (
-              <AppField
-                field={field}
-                label="Current Password"
-                type={showCurrent ? "text" : "password"}
-                placeholder="Enter current password"
-                append={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowCurrent((prev) => !prev)}
-                    aria-label={showCurrent ? "Hide password" : "Show password"}
-                  >
-                    {showCurrent ? (
-                      <EyeOff className="size-4" aria-hidden="true" />
-                    ) : (
-                      <Eye className="size-4" aria-hidden="true" />
-                    )}
-                  </Button>
-                }
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type={showCurrent ? "text" : "password"}
+                    placeholder="Enter current password"
+                    className="pl-9 pr-10"
+                    append={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowCurrent((prev) => !prev)}
+                        aria-label={
+                          showCurrent ? "Hide password" : "Show password"
+                        }
+                        className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showCurrent ? (
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </Button>
+                    }
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
-          {/* New Password */}
+          {/* New Password Field */}
           <form.Field
             name="newPassword"
             validators={{
@@ -138,42 +152,59 @@ export default function ChangePasswordForm() {
             }}
           >
             {(field) => (
-              <AppField
-                field={field}
-                label="New Password"
-                type={showNew ? "text" : "password"}
-                placeholder="New password (min. 8 characters)"
-                append={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowNew((prev) => !prev)}
-                  >
-                    {showNew ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
-                  </Button>
-                }
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  New Password
+                </label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type={showNew ? "text" : "password"}
+                    placeholder="New password (min. 8 characters)"
+                    className="pl-9 pr-10"
+                    append={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowNew((prev) => !prev)}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showNew ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    }
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
+          {/* Server Error Alert */}
           {serverError && (
-            <Alert variant="destructive">
-              <AlertDescription>{serverError}</AlertDescription>
+            <Alert
+              variant="destructive"
+              className="rounded-lg border-red-200 bg-red-50"
+            >
+              <AlertDescription className="text-sm text-red-600">
+                {serverError}
+              </AlertDescription>
             </Alert>
           )}
 
+          {/* Submit Button */}
           <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
               <AppSubmitButton
                 isPending={isSubmitting || isPending}
                 pendingLabel="Changing password..."
                 disabled={!canSubmit}
-                className="w-full"
+                className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-50"
               >
                 Change Password
               </AppSubmitButton>

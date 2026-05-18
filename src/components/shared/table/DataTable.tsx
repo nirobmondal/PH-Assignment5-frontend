@@ -152,9 +152,12 @@ const DataTable = <TData,>({
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    ...(pagination
+      ? {}
+      : { getPaginationRowModel: getPaginationRowModel() }),
     // manualSorting: !!sorting,
     manualPagination: !!pagination,
+    autoResetPageIndex: pagination ? false : undefined,
     pageCount: pagination ? Math.max(meta?.totalPages ?? 0, 0) : undefined,
     state: {
       // ...(sorting ? { sorting: sorting.state } : {}),

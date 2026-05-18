@@ -326,14 +326,14 @@ const OrderListPage = () => {
               state: pagination,
               onPaginationChange: setPagination,
             }}
-            search={{
-              initialValue: searchTerm,
-              placeholder: "Search orders...",
-              onDebouncedChange: (value) => {
-                setSearchTerm(value);
-                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-              },
-            }}
+            // search={{
+            //   initialValue: searchTerm,
+            //   placeholder: "Search Is not ip",
+            //   onDebouncedChange: (value) => {
+            //     setSearchTerm(value);
+            //     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+            //   },
+            // }}
             filters={{
               configs: filterConfigs,
               values: filters,

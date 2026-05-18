@@ -22,6 +22,9 @@ const DataTableSearch = ({
 }: DataTableSearchProps) => {
   const [value, setValue] = useState(initialValue);
   const skipNextDebounceRef = useRef(false);
+  const onDebouncedChangeRef = useRef(onDebouncedChange);
+
+  onDebouncedChangeRef.current = onDebouncedChange;
 
   useEffect(() => {
     if (skipNextDebounceRef.current) {
@@ -30,16 +33,16 @@ const DataTableSearch = ({
     }
 
     const timer = setTimeout(() => {
-      onDebouncedChange(value.trim());
+      onDebouncedChangeRef.current(value.trim());
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [value, debounceMs, onDebouncedChange]);
+  }, [value, debounceMs]);
 
   const handleClear = () => {
     skipNextDebounceRef.current = true;
     setValue("");
-    onDebouncedChange("");
+    onDebouncedChangeRef.current("");
   };
 
   return (

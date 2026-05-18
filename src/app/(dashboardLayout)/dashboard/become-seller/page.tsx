@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Store, MapPin, Phone } from "lucide-react";
 
 import AppField from "@/components/shared/form/AppField";
 import AppSubmitButton from "@/components/shared/form/AppSubmitButton";
@@ -61,24 +62,27 @@ export default function SellerCreatePage() {
   });
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Become a Seller</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-md mx-auto rounded-2xl border border-gray-100 bg-white shadow-xl">
+      <CardHeader className="space-y-2 px-6 pt-8 pb-4 text-center">
+        <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          Become a Seller
+        </CardTitle>
+        <CardDescription className="text-sm text-gray-500">
           Provide your shop details to start selling on Niramoy.
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="px-6 pb-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-4"
+          className="space-y-5"
           noValidate
         >
+          {/* Shop Name Field */}
           <form.Field
             name="shopName"
             validators={{
@@ -86,60 +90,86 @@ export default function SellerCreatePage() {
             }}
           >
             {(field) => (
-              <AppField
-                field={field}
-                label="Shop Name"
-                type="text"
-                placeholder="Niramoy Pharmacy"
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Shop Name
+                </label>
+                <div className="relative">
+                  <Store className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type="text"
+                    placeholder="Niramoy Pharmacy"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
-          <form.Field
-            name="shopAddress"
-            // validators={{
-            //   onChange: createSellerProfileSchema.shape.shopAddress,
-            // }}
-          >
+          {/* Shop Address Field */}
+          <form.Field name="shopAddress">
             {(field) => (
-              <AppField
-                field={field}
-                label="Shop Address"
-                type="text"
-                placeholder="123, Main Street, Dhaka"
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Shop Address
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type="text"
+                    placeholder="123, Main Street, Dhaka"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
-          <form.Field
-            name="shopPhone"
-            // validators={{
-            //   onChange: createSellerProfileSchema.shape.shopPhone,
-            // }}
-          >
+          {/* Shop Phone Field */}
+          <form.Field name="shopPhone">
             {(field) => (
-              <AppField
-                field={field}
-                label="Shop Phone"
-                type="tel"
-                placeholder="+8801XXXXXXXXX"
-              />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Shop Phone
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <AppField
+                    field={field}
+                    label=""
+                    type="tel"
+                    placeholder="+8801XXXXXXXXX"
+                    className="pl-9"
+                  />
+                </div>
+              </div>
             )}
           </form.Field>
 
+          {/* Server Error Alert */}
           {serverError && (
-            <Alert variant="destructive">
-              <AlertDescription>{serverError}</AlertDescription>
+            <Alert
+              variant="destructive"
+              className="rounded-lg border-red-200 bg-red-50"
+            >
+              <AlertDescription className="text-sm text-red-600">
+                {serverError}
+              </AlertDescription>
             </Alert>
           )}
 
+          {/* Submit Button */}
           <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
               <AppSubmitButton
                 isPending={isSubmitting || isPending}
                 pendingLabel="Creating seller profile..."
                 disabled={!canSubmit}
-                className="w-full"
+                className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:opacity-50"
               >
                 Become a Seller
               </AppSubmitButton>
@@ -148,13 +178,13 @@ export default function SellerCreatePage() {
         </form>
       </CardContent>
 
-      <CardFooter className="justify-center border-t pt-4">
-        <p className="text-sm text-muted-foreground">
+      <CardFooter className="justify-center border-t border-gray-100 px-6 py-5">
+        <p className="text-sm text-gray-500">
           Already a seller?{" "}
           <button
             type="button"
             onClick={() => router.push("/seller/dashboard")}
-            className="text-primary hover:underline"
+            className="font-semibold text-gray-900 hover:underline underline-offset-4 transition-colors"
           >
             Go to dashboard
           </button>

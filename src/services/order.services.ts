@@ -33,7 +33,7 @@ export const initiateOrder = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -48,7 +48,7 @@ export const placeOrderWithPayment = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -61,7 +61,7 @@ export const getOrderById = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -76,7 +76,7 @@ export const getOrders = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -140,7 +140,7 @@ export const cancelOrder = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -166,7 +166,7 @@ export const updateOrderStatus = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };

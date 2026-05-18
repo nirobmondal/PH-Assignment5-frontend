@@ -61,7 +61,7 @@ const CustomerDashboardContent = () => {
     },
     {
       label: "Total Spent",
-      value: `$${customerStats.totalAmountSpent.toFixed(2)}`,
+      value: `BDT ${customerStats.totalAmountSpent.toFixed(2)}`,
       icon: TrendingUp,
       description: "Successful orders",
     },

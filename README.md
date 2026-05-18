@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Niramoy Frontend
 
-## Getting Started
+Web client for **Niramoy**, a multi-vendor online medicine marketplace. Customers browse and buy medicines; sellers manage catalog and orders; admins oversee users, taxonomy, and platform data. The UI talks to the **Niramoy Backend** REST API using **cookie-based JWT** sessions and **Google sign-in**. Checkout redirects to **Stripe** via URLs returned by the API.
 
-First, run the development server:
+## Live demo
+
+| Environment | URL |
+|-------------|-----|
+| Production (Vercel) | _Add your link after deploy_ |
+
+
+## Tech stack
+
+- **Framework:** [Next.js](https://nextjs.org/) 16 (App Router), React 19, TypeScript
+- **Styling:** Tailwind CSS 4, [shadcn/ui](https://ui.shadcn.com/) / Radix primitives, `next-themes`, Lucide icons
+- **Data & forms:** [TanStack Query](https://tanstack.com/query), TanStack Form, TanStack Table
+- **HTTP:** [Axios](https://axios-http.com/) server-side client with `next/headers` cookies and `withCredentials`
+- **Auth UX:** [@react-oauth/google](https://www.npmjs.com/package/@react-oauth/google); JWT decode/refresh helpers (`jsonwebtoken` where used server-side)
+- **Charts & UX:** Recharts, Sonner toasts, Embla carousel, Vaul drawer, cmdk, date-fns
+- **Deploy:** [Vercel](https://vercel.com/) (recommended for Next.js)
+
+## Core features
+
+- **Public site:** Home, medicine catalog and detail, static pages (about, contact, delivery, FAQs, terms).
+- **Auth:** Register, login, email verification (OTP), forgot/reset password, change password, **Google** button, logout; tokens stored in **HTTP-only cookies** aligned with the backend.
+- **Customer:** Dashboard, cart, checkout, orders, Stripe return page (`/dashboard/payment/success`), become seller.
+- **Seller:** Dashboard, manage medicines, manage orders.
+- **Admin:** Dashboard, manage users, categories, manufacturers, orders, reviews.
+- **Shared:** Role-aware navigation, data tables, stats cards, profile area.
+
+## Project structure
+
+```text
+src/
+├── app/                          # App Router routes & layouts
+│   ├── (commonLayout)/           # Public + auth pages (home, medicine, login, …)
+│   ├── (dashboardLayout)/        # Authenticated dashboards (customer / seller / admin)
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── modules/                  # Feature UI (Auth, Cart, Medicine, Order, …)
+│   ├── shared/                   # Navbar, footer, tables, cells, …
+│   └── ui/                       # shadcn-style primitives
+├── lib/                          # axios client, auth helpers, JWT/token utils, nav config
+├── providers/                    # React Query provider
+├── services/                     # Server actions / API calls per domain
+├── types/                        # TypeScript models
+├── zod/                          # Validation schemas
+└── proxy.ts                      # Route-guard / refresh logic (wire as Next middleware if used)
+```
+
+## Prerequisites
+
+- Node.js 20+ (matches `@types/node` in the project)
+- npm
+- Running **Niramoy Backend** with CORS allowing this app’s origin and credentials (see the backend README in `Niramoy-Backend/`)
+
+## Environment variables
+
+Create `.env.local` in the project root (Next.js loads it for `next dev` / `next build`).
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `NEXT_PUBLIC_API_BASE_URL` | Yes | Backend API base URL including version prefix, e.g. `http://localhost:5000/api/v1` |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Yes | Google OAuth Web client ID for `@react-oauth/google` |
+| `JWT_ACCESS_SECRET` | If using `src/proxy.ts` as middleware | Same secret the backend uses to sign access tokens (`ACCESS_TOKEN_SECRET`) for edge verification |
+
+
+## Local setup
+
+```bash
+cd niramoy-frontend
+npm install
+```
+
+Add `.env.local` as described above, then:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run start` | Run production server locally |
+| `npm run lint` | ESLint |
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

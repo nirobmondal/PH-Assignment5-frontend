@@ -1,4 +1,4 @@
-export interface IReviewResponse {
+export interface IReviewItem {
   id: string;
   rating: number;
   comment?: string;
@@ -18,3 +18,16 @@ export interface IReviewResponse {
     name: string;
   };
 }
+
+export interface IReviewListResponse {
+  data: IReviewItem[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// For backward compatibility and dialog usage
+export interface IReviewResponse extends IReviewItem {}

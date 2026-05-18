@@ -79,7 +79,7 @@ const AdminDashboardContent = () => {
     },
     {
       label: "Platform Earnings",
-      value: `$${adminStats.totalPlatformAmountEarned.toFixed(2)}`,
+      value: `BDT ${adminStats.totalPlatformAmountEarned.toFixed(2)}`,
       icon: TrendingUp,
       description: "From deliveries",
     },

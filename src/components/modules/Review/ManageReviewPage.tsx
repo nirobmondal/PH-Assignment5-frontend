@@ -2,11 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, PaginationState } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import DataTable from "@/components/shared/table/DataTable";
+import {
+  DataTableFilterConfig,
+  DataTableFilterValues,
+} from "@/components/shared/table/DataTableFilters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +28,11 @@ import {
   getAllReviews,
   updateReview,
 } from "@/services/review.services";
-import { IReviewResponse } from "@/types/review.types";
+import {
+  IReviewResponse,
+  IReviewItem,
+  IReviewListResponse,
+} from "@/types/review.types";
 
 const truncate = (value: string | undefined, length = 48) => {
   if (!value) {
@@ -33,8 +41,35 @@ const truncate = (value: string | undefined, length = 48) => {
   return value.length > length ? `${value.slice(0, length)}...` : value;
 };
 
+const buildQueryString = (
+  pagination: PaginationState,
+  searchTerm: string,
+  filters: DataTableFilterValues,
+) => {
+  const params = new URLSearchParams();
+  params.set("page", String(pagination.pageIndex + 1));
+  params.set("limit", String(pagination.pageSize));
+
+  if (searchTerm.trim()) {
+    params.set("searchTerm", searchTerm.trim());
+  }
+
+  const ratingValue = filters.rating;
+  if (typeof ratingValue === "string" && ratingValue.length > 0) {
+    params.set("rating", ratingValue);
+  }
+
+  return params.toString();
+};
+
 const ManageReviewPage = () => {
   const queryClient = useQueryClient();
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<DataTableFilterValues>({});
   const [selectedReview, setSelectedReview] = useState<IReviewResponse | null>(
     null,
   );
@@ -42,20 +77,29 @@ const ManageReviewPage = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
+  const queryString = useMemo(
+    () => buildQueryString(pagination, searchTerm, filters),
+    [pagination, searchTerm, filters],
+  );
+
   const {
-    data: reviews = [],
+    data: reviewsResponse,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["admin-reviews"],
+    queryKey: ["admin-reviews", queryString],
     queryFn: async () => {
-      const response = await getAllReviews();
+      const response = await getAllReviews(queryString);
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch reviews");
       }
-      return response.data as IReviewResponse[];
+      return response.data as IReviewListResponse;
     },
+    placeholderData: (previous) => previous,
   });
+
+  const reviews = reviewsResponse?.data ?? [];
+  const meta = reviewsResponse?.meta;
 
   const updateMutation = useMutation({
     mutationFn: async ({
@@ -97,11 +141,30 @@ const ManageReviewPage = () => {
     },
   });
 
-  const columns = useMemo<ColumnDef<IReviewResponse>[]>(
+  const filterConfigs: DataTableFilterConfig[] = useMemo(
+    () => [
+      {
+        id: "rating",
+        label: "Rating",
+        type: "single-select",
+        options: [
+          { label: "1 Star", value: "1" },
+          { label: "2 Stars", value: "2" },
+          { label: "3 Stars", value: "3" },
+          { label: "4 Stars", value: "4" },
+          { label: "5 Stars", value: "5" },
+        ],
+      },
+    ],
+    [],
+  );
+
+  const columns = useMemo<ColumnDef<IReviewItem>[]>(
     () => [
       {
         header: "Serial",
-        cell: ({ row }) => row.index + 1,
+        cell: ({ row }) =>
+          pagination.pageIndex * pagination.pageSize + row.index + 1,
       },
       {
         header: "Medicine",
@@ -123,7 +186,7 @@ const ManageReviewPage = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <div className="flex justify-end">
+          <div className="flex justify-start">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon-sm" className="h-8 w-8">
@@ -133,7 +196,7 @@ const ManageReviewPage = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => {
-                    setSelectedReview(row.original);
+                    setSelectedReview(row.original as IReviewResponse);
                     setIsViewOpen(true);
                   }}
                 >
@@ -141,7 +204,7 @@ const ManageReviewPage = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
-                    setSelectedReview(row.original);
+                    setSelectedReview(row.original as IReviewResponse);
                     setIsEditOpen(true);
                   }}
                 >
@@ -150,7 +213,7 @@ const ManageReviewPage = () => {
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => {
-                    setSelectedReview(row.original);
+                    setSelectedReview(row.original as IReviewResponse);
                     setIsDeleteOpen(true);
                   }}
                 >
@@ -162,7 +225,7 @@ const ManageReviewPage = () => {
         ),
       },
     ],
-    [setIsDeleteOpen, setIsEditOpen, setIsViewOpen],
+    [pagination.pageIndex, pagination.pageSize],
   );
 
   return (
@@ -180,6 +243,49 @@ const ManageReviewPage = () => {
               columns={columns}
               isLoading={isLoading}
               emptyMessage="No reviews found."
+              pagination={{
+                state: pagination,
+                onPaginationChange: setPagination,
+              }}
+              search={{
+                initialValue: searchTerm,
+                placeholder: "Search by comment, medicine, or customer",
+                debounceMs: 500,
+                onDebouncedChange: (value) => {
+                  setSearchTerm(value);
+                  setPagination((prev) => ({
+                    ...prev,
+                    pageIndex: 0,
+                  }));
+                },
+              }}
+              filters={{
+                configs: filterConfigs,
+                values: filters,
+                onFilterChange: (filterId, value) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    [filterId]: value,
+                  }));
+                  setPagination((prev) => ({
+                    ...prev,
+                    pageIndex: 0,
+                  }));
+                },
+                onClearAll: () => {
+                  setFilters({});
+                  setPagination((prev) => ({
+                    ...prev,
+                    pageIndex: 0,
+                  }));
+                },
+              }}
+              meta={{
+                page: meta?.page ?? pagination.pageIndex + 1,
+                limit: meta?.limit ?? pagination.pageSize,
+                total: meta?.total ?? reviews.length,
+                totalPages: meta?.totalPages ?? 0,
+              }}
             />
           )}
         </CardContent>

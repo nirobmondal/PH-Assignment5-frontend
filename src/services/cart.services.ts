@@ -13,7 +13,7 @@ export const getCart = async (): Promise<
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -26,7 +26,7 @@ export const addToCart = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -39,7 +39,7 @@ export const updateCartItem = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -52,7 +52,7 @@ export const removeFromCart = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -63,7 +63,7 @@ export const clearCart = async (): Promise<ApiResponse<unknown>> => {
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };

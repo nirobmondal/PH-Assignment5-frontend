@@ -123,7 +123,7 @@ const ManageCategoryPage = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <div className="flex justify-end">
+          <div className="flex justify-start">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon-sm" className="h-8 w-8">

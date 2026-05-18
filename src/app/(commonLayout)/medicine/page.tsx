@@ -1,6 +1,6 @@
 import MedicinePublicPage from "@/components/modules/Medicine/MedicinePublicPage";
 
-const MedicinePage = () => {
+const MedicinePage = async () => {
   return <MedicinePublicPage />;
 };
 

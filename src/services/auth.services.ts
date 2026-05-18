@@ -16,6 +16,7 @@ import {
   IForgotPasswordPayload,
   ILoginUserPayload,
   IRegisterCustomerPayload,
+  IResendVerificationOtpPayload,
   IResetPasswordPayload,
   IVerifyEmailPayload,
 } from "@/zod/auth.validation";
@@ -154,7 +155,7 @@ export const loginUser = async (
     }
     return {
       success: false,
-      message: `Login failed: ${error.message}`,
+      message: `Login failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -204,7 +205,7 @@ export const registerUser = async (
 
     return {
       success: false,
-      message: `Registration failed: ${error.message}`,
+      message: `Registration failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -230,7 +231,7 @@ export const sendForgotPasswordOtp = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -256,7 +257,7 @@ export const resetUserPassword = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -280,7 +281,7 @@ export const googleLogin = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Google login failed: ${error.message}`,
+      message: `Google login failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -306,7 +307,33 @@ export const verifyUserEmail = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
+    };
+  }
+};
+
+export const resendVerificationOtp = async (
+  email: IResendVerificationOtpPayload,
+): Promise<ApiResponse<null>> => {
+  const parsedPayload =
+    authValidation.resendVerificationOtpValidationSchema.safeParse({ email });
+
+  if (!parsedPayload.success) {
+    return {
+      success: false,
+      message: parsedPayload.error.issues[0].message || "Invalid input",
+    };
+  }
+
+  try {
+    return await httpClient.post<null>(
+      "/auth/resend-verification-otp",
+      parsedPayload.data,
+    );
+  } catch (error: any) {
+    return {
+      success: false,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -341,7 +368,7 @@ export const changeUserPassword = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -355,7 +382,7 @@ export const logoutUser = async (): Promise<ApiResponse<unknown>> => {
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -372,7 +399,7 @@ export const updateUserProfile = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };

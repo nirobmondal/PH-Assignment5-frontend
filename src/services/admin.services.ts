@@ -15,7 +15,7 @@ export const getAllUsers = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -31,7 +31,7 @@ export const updateUserStatus = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };

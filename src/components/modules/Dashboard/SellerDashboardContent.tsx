@@ -73,7 +73,7 @@ const SellerDashboardContent = () => {
     },
     {
       label: "Total Earned",
-      value: `$${sellerStats.totalAmountEarned.toFixed(2)}`,
+      value: `BDT ${sellerStats.totalAmountEarned.toFixed(2)}`,
       icon: DollarSign,
       description: "From deliveries",
     },

@@ -27,7 +27,7 @@ export const createManufacturer = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -40,7 +40,7 @@ export const getManufacturers = async (): Promise<
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -66,7 +66,7 @@ export const updateManufacturer = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };
@@ -79,7 +79,7 @@ export const deleteManufacturer = async (
   } catch (error: any) {
     return {
       success: false,
-      message: `Request failed: ${error.message}`,
+      message: `Request failed: ${error.response?.data?.message}`,
     };
   }
 };

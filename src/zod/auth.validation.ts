@@ -67,6 +67,10 @@ const updateUserValidationSchema = z.object({
   phone: z.string().trim().optional(),
 });
 
+const resendVerificationOtpValidationSchema = z.object({
+  email: z.email("Invalid email address"),
+});
+
 export type IRegisterCustomerPayload = z.infer<
   typeof registerCustomerValidationSchema
 >;
@@ -81,6 +85,9 @@ export type IVerifyEmailPayload = z.infer<typeof verifyEmailValidationSchema>;
 export type IForgotPasswordPayload = z.infer<
   typeof forgetPasswordValidationSchema
 >;
+export type IResendVerificationOtpPayload = z.infer<
+  typeof resendVerificationOtpValidationSchema
+>;
 
 export const authValidation = {
   registerCustomerValidationSchema,
@@ -91,4 +98,5 @@ export const authValidation = {
   resetPasswordValidationSchema,
   updateUserValidationSchema,
   updateSellerProfileValidationSchema,
+  resendVerificationOtpValidationSchema,
 };

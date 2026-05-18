@@ -56,7 +56,7 @@ export const createSellerProfile = async (
 
     return {
       success: false,
-      message: `Seller profile creation failed: ${error.message}`,
+      message: `Seller profile creation failed: ${error.response?.data?.message}`,
     };
   }
 };

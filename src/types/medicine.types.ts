@@ -34,6 +34,8 @@ export interface MedicineWithRelations extends Medicine {
     id: string;
     name: string;
     shopName: string;
+    shopAddress: string;
+    shopPhone: string;
   };
 }
 

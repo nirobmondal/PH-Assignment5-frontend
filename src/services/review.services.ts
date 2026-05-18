@@ -2,7 +2,7 @@
 
 import { httpClient } from "@/lib/axios/httpClient";
 import { ApiErrorResponse, ApiResponse } from "@/types/api.types";
-import { IReviewResponse } from "@/types/review.types";
+import { IReviewResponse, IReviewListResponse } from "@/types/review.types";
 import {
   createReviewSchema,
   ICreateReviewPayload,
@@ -47,11 +47,13 @@ export const getReviewsByMedicineId = async (
   }
 };
 
-export const getAllReviews = async (): Promise<
-  ApiResponse<IReviewResponse[] | ApiErrorResponse>
-> => {
+export const getAllReviews = async (
+  query?: string,
+): Promise<ApiResponse<IReviewListResponse | ApiErrorResponse>> => {
   try {
-    return await httpClient.get<IReviewResponse[]>("/review");
+    return await httpClient.get<IReviewListResponse>(
+      query ? `/review?${query}` : "/review",
+    );
   } catch (error: any) {
     return {
       success: false,

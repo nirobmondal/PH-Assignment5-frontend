@@ -270,7 +270,7 @@ const ManageMedicinePage = () => {
       {
         accessorKey: "price",
         header: "Price",
-        cell: ({ row }) => `$${row.original.price}`,
+        cell: ({ row }) => `BDT ${row.original.price}`,
       },
       {
         accessorKey: "stock",

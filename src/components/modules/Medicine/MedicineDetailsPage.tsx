@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -32,19 +38,10 @@ import { IOrderResponse, OrderStatus } from "@/types/order.types";
 import { IReviewResponse } from "@/types/review.types";
 import { IUserResponse } from "@/types/user.types";
 
-const formatPrice = (value: number | string) => {
+const formatPriceBDT = (value: number | string) => {
   const numericValue = typeof value === "string" ? Number(value) : value;
-  if (!Number.isFinite(numericValue)) {
-    return "-";
-  }
-  return `$${numericValue}`;
-};
-
-const formatRating = (value: number) => {
-  if (!Number.isFinite(value)) {
-    return "0.0";
-  }
-  return value.toFixed(1);
+  if (!Number.isFinite(numericValue)) return "–";
+  return `BDT ${numericValue}`;
 };
 
 const buildDeliveredOrderQueryString = () => {
@@ -64,66 +61,63 @@ const MedicineDetailsPage = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const { data, isLoading, error } = useQuery({
+  // ---------- Medicine data ----------
+  const {
+    data: medicine,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["medicine-details", medicineId],
     queryFn: async () => {
-      if (!medicineId) {
-        throw new Error("Missing medicine id");
-      }
+      if (!medicineId) throw new Error("Missing medicine id");
       const response = await getMedicineById(medicineId);
-      if (!response.success) {
-        throw new Error(response.message || "Failed to fetch medicine");
-      }
+      if (!response.success) throw new Error(response.message);
       return response.data as MedicineWithRelations;
     },
     enabled: Boolean(medicineId),
   });
 
+  // ---------- Add to cart mutation ----------
   const addToCartMutation = useMutation({
     mutationFn: addToCart,
-    onSuccess: (response) => {
-      if (!response.success) {
-        toast.error(response.message || "Failed to add to cart");
+    onSuccess: (res) => {
+      if (!res.success) {
+        toast.error(res.message || "Failed to add to cart");
         return;
       }
       toast.success("Added to cart");
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       router.refresh();
     },
-    onError: () => {
-      toast.error("Failed to add to cart");
-    },
+    onError: () => toast.error("Failed to add to cart"),
   });
 
+  // ---------- User info ----------
   const { data: userInfo } = useQuery({
     queryKey: ["user-info"],
     queryFn: getUserInfo,
   });
+  const user = userInfo as IUserResponse | null;
+  const isAuthenticated = !!user;
+  const isCustomer = user?.role === UserRole.CUSTOMER;
 
+  // ---------- Reviews ----------
   const {
-    data: reviewResponse,
-    isLoading: isReviewLoading,
-    error: reviewError,
+    data: reviews = [],
+    isLoading: isReviewsLoading,
+    error: reviewsError,
   } = useQuery({
     queryKey: ["medicine-reviews", medicineId],
     queryFn: async () => {
-      if (!medicineId) {
-        throw new Error("Missing medicine id");
-      }
+      if (!medicineId) throw new Error("Missing medicine id");
       const response = await getReviewsByMedicineId(medicineId);
-      if (!response.success) {
-        throw new Error(response.message || "Failed to fetch reviews");
-      }
+      if (!response.success) throw new Error(response.message);
       return response.data as IReviewResponse[];
     },
     enabled: Boolean(medicineId),
   });
 
-  const reviews = reviewResponse ?? [];
-
-  const user = userInfo as IUserResponse | null;
-  const isCustomer = user?.role === UserRole.CUSTOMER;
-
+  // ---------- Delivered orders (to check review eligibility) ----------
   const {
     data: deliveredOrders,
     isLoading: isOrdersLoading,
@@ -132,48 +126,39 @@ const MedicineDetailsPage = () => {
     queryKey: ["delivered-orders", medicineId],
     queryFn: async () => {
       const response = await getOrders(buildDeliveredOrderQueryString());
-      if (!response.success) {
-        throw new Error(response.message || "Failed to fetch orders");
-      }
+      if (!response.success) throw new Error(response.message);
       return response.data as IOrderResponse;
     },
     enabled: Boolean(medicineId) && isCustomer,
   });
 
+  // Check if user has a delivered order item for this medicine
   const reviewableOrderItem = useMemo(() => {
-    if (!deliveredOrders?.data || !medicineId) {
-      return null;
-    }
-
+    if (!deliveredOrders?.data || !medicineId) return null;
     for (const order of deliveredOrders.data) {
       for (const sellerOrder of order.sellerOrders) {
         for (const item of sellerOrder.items) {
-          if (item.medicine?.id === medicineId) {
-            return item;
-          }
+          if (item.medicine?.id === medicineId) return item;
         }
       }
     }
-
     return null;
-  }, [deliveredOrders?.data, medicineId]);
+  }, [deliveredOrders, medicineId]);
 
+  // Find user's own review (if any)
   const userReview = useMemo(() => {
-    if (!user || !reviews.length) {
-      return null;
-    }
-
-    return reviews.find((review) => review.customer?.id === user.id) ?? null;
+    if (!user || !reviews.length) return null;
+    return reviews.find((rev) => rev.customer?.id === user.id) ?? null;
   }, [reviews, user]);
 
-  const canCreateReview =
-    isCustomer && Boolean(reviewableOrderItem) && !userReview;
+  const canCreateReview = isCustomer && !!reviewableOrderItem && !userReview;
 
+  // ---------- Review mutations ----------
   const createReviewMutation = useMutation({
     mutationFn: createReview,
-    onSuccess: (response) => {
-      if (!response.success) {
-        toast.error(response.message || "Failed to submit review");
+    onSuccess: (res) => {
+      if (!res.success) {
+        toast.error(res.message || "Failed to submit review");
         return;
       }
       toast.success("Review submitted");
@@ -184,22 +169,20 @@ const MedicineDetailsPage = () => {
         queryKey: ["medicine-details", medicineId],
       });
     },
-    onError: () => {
-      toast.error("Failed to submit review");
-    },
+    onError: () => toast.error("Failed to submit review"),
   });
 
   const updateReviewMutation = useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       reviewId,
       payload,
     }: {
       reviewId: string;
       payload: { rating?: number; comment?: string };
     }) => updateReview(reviewId, payload),
-    onSuccess: (response) => {
-      if (!response.success) {
-        toast.error(response.message || "Failed to update review");
+    onSuccess: (res) => {
+      if (!res.success) {
+        toast.error(res.message || "Failed to update review");
         return;
       }
       toast.success("Review updated");
@@ -211,16 +194,14 @@ const MedicineDetailsPage = () => {
       });
       setIsEditOpen(false);
     },
-    onError: () => {
-      toast.error("Failed to update review");
-    },
+    onError: () => toast.error("Failed to update review"),
   });
 
   const deleteReviewMutation = useMutation({
     mutationFn: deleteReview,
-    onSuccess: (response) => {
-      if (!response.success) {
-        toast.error(response.message || "Failed to delete review");
+    onSuccess: (res) => {
+      if (!res.success) {
+        toast.error(res.message || "Failed to delete review");
         return;
       }
       toast.success("Review deleted");
@@ -232,11 +213,10 @@ const MedicineDetailsPage = () => {
       });
       setIsDeleteOpen(false);
     },
-    onError: () => {
-      toast.error("Failed to delete review");
-    },
+    onError: () => toast.error("Failed to delete review"),
   });
 
+  // Loading / error states
   if (isLoading) {
     return (
       <section className="container mx-auto px-4 py-10">
@@ -246,8 +226,7 @@ const MedicineDetailsPage = () => {
       </section>
     );
   }
-
-  if (error || !data) {
+  if (error || !medicine) {
     return (
       <section className="container mx-auto px-4 py-10">
         <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
@@ -257,15 +236,26 @@ const MedicineDetailsPage = () => {
     );
   }
 
-  const sellerName = data.seller.shopName;
-  const maxQuantity =
-    Number.isFinite(data.stock) && data.stock > 0 ? data.stock : 1;
+  const seller = medicine.seller;
+  const maxQuantity = Math.max(1, medicine.stock);
   const safeQuantity = Math.min(Math.max(quantity, 1), maxQuantity);
-  const avgRating = Number.isFinite(data.avgRating) ? data.avgRating : 0;
-  const reviewCount = Number.isFinite(data.reviewCount) ? data.reviewCount : 0;
+  const avgRating = medicine.avgRating ?? 0;
+  const reviewCount = medicine.reviewCount ?? 0;
+
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to add items to cart");
+      return;
+    }
+    addToCartMutation.mutate({
+      medicineId: medicine.id,
+      quantity: safeQuantity,
+    });
+  };
 
   return (
-    <section className="container mx-auto px-4 py-10">
+    <section className="container mx-auto px-4 py-6 md:py-10">
+      {/* Back button */}
       <div className="mb-6">
         <Button asChild variant="ghost" className="pl-0">
           <Link href="/medicine">
@@ -275,223 +265,231 @@ const MedicineDetailsPage = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+      {/* Top section: Image + Main info */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Left: Image */}
         <Card className="overflow-hidden border-muted bg-white">
-          <div className="h-80 bg-[linear-gradient(135deg,_rgba(16,185,129,0.16),_rgba(236,253,245,1))]">
-            {data.imageUrl ? (
+          <div className="aspect-square w-full bg-gradient-to-br from-emerald-50 to-white">
+            {medicine.imageUrl ? (
               <img
-                src={data.imageUrl}
-                alt={data.name}
+                src={medicine.imageUrl}
+                alt={medicine.name}
                 className="h-full w-full object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
-                No image
+                No image available
               </div>
             )}
           </div>
         </Card>
 
-        <Card className="border-muted bg-white">
-          <CardContent className="space-y-5 p-6">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-semibold text-foreground">
-                  {data.name}
-                </h1>
-                {data.isFeatured && <Badge variant="secondary">Featured</Badge>}
-                <Badge variant={data.isAvailable ? "default" : "destructive"}>
-                  {data.isAvailable ? "Available" : "Unavailable"}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">{sellerName}</p>
+        {/* Right: Medicine details + Add to cart */}
+        <div className="space-y-5">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold text-foreground">
+                {medicine.name}
+              </h1>
+              {medicine.isFeatured && (
+                <Badge variant="secondary">Featured</Badge>
+              )}
+              <Badge variant={medicine.isAvailable ? "default" : "destructive"}>
+                {medicine.isAvailable ? "Available" : "Unavailable"}
+              </Badge>
             </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {seller?.shopName || "Seller"}
+            </p>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex items-center gap-1">
+              <ReviewStars value={avgRating} />
+              <span className="font-semibold">{avgRating}</span>
+              <span className="text-muted-foreground">({reviewCount})</span>
+            </div>
+            {medicine.dosageForm && (
+              <Badge variant="outline">{medicine.dosageForm}</Badge>
+            )}
+            {medicine.strength && (
+              <Badge variant="outline">{medicine.strength}</Badge>
+            )}
+          </div>
+
+          {/* Price */}
+          <div className="rounded-lg bg-neutral-100 px-4 py-3 dark:bg-neutral-800">
+            <p className="text-xs uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+              Price
+            </p>
+            <p className="text-3xl font-bold text-neutral-900 dark:text-white">
+              {formatPriceBDT(medicine.price)}
+            </p>
+          </div>
+
+          {/* Info grid */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-muted-foreground">Stock</p>
+              <p className="font-medium">{medicine.stock}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Category</p>
+              <p className="font-medium">{medicine.category?.name ?? "-"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Manufacturer</p>
+              <p className="font-medium">
+                {medicine.manufacturer?.name ?? "-"}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Dosage Form</p>
+              <p className="font-medium">{medicine.dosageForm ?? "-"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Strength</p>
+              <p className="font-medium">{medicine.strength ?? "-"}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Shop</p>
+              <p className="font-medium">{seller?.shopName ?? "-"}</p>
+            </div>
+          </div>
+
+          {/* Add to cart with quantity */}
+          <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-2">
-                <ReviewStars value={avgRating} />
-                <span className="font-semibold text-foreground">
-                  {formatRating(avgRating)}
-                </span>
-                <span className="text-muted-foreground">({reviewCount})</span>
-              </div>
-              <Badge variant="outline">{data.dosageForm}</Badge>
-              <Badge variant="outline">{data.strength}</Badge>
-            </div>
-
-            <div className="rounded-lg bg-emerald-50 px-4 py-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">
-                Price
-              </p>
-              <p className="text-2xl font-semibold text-emerald-700">
-                {formatPrice(data.price)}
-              </p>
-            </div>
-
-            <div className="grid gap-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Stock</span>
-                <span className="font-medium text-foreground">
-                  {data.stock}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Category</span>
-                <span className="font-medium text-foreground">
-                  {data.category?.name ?? "-"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Manufacturer</span>
-                <span className="font-medium text-foreground">
-                  {data.manufacturer?.name ?? "-"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Shop</span>
-                <span className="font-medium text-foreground">
-                  {sellerName || "-"}
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-dashed p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                    disabled={safeQuantity <= 1}
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <div className="min-w-10 rounded-md border px-3 py-2 text-center text-sm font-semibold">
-                    {safeQuantity}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() =>
-                      setQuantity((prev) => Math.min(maxQuantity, prev + 1))
-                    }
-                    disabled={safeQuantity >= maxQuantity}
-                    aria-label="Increase quantity"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-
                 <Button
-                  className="bg-emerald-600 hover:bg-emerald-700"
-                  onClick={() =>
-                    addToCartMutation.mutate({
-                      medicineId: data.id,
-                      quantity: safeQuantity,
-                    })
-                  }
-                  disabled={!data.isAvailable || addToCartMutation.isPending}
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={safeQuantity <= 1}
                 >
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Add to cart
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <div className="w-12 text-center font-medium">
+                  {safeQuantity}
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() =>
+                    setQuantity((q) => Math.min(maxQuantity, q + 1))
+                  }
+                  disabled={safeQuantity >= maxQuantity}
+                >
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
+              <Button
+                className="bg-neutral-900 hover:bg-neutral-800 text-white"
+                onClick={handleAddToCart}
+                disabled={
+                  !medicine.isAvailable ||
+                  addToCartMutation.isPending ||
+                  !isAuthenticated
+                }
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Add to cart
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+            {!isAuthenticated && (
+              <p className="text-xs text-muted-foreground mt-3">
+                Please{" "}
+                <Link href="/login" className="underline">
+                  log in
+                </Link>{" "}
+                to add items to cart.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Card className="border-muted bg-white">
-          <CardContent className="space-y-4 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Customer reviews
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Based on {reviewCount} review{reviewCount !== 1 ? "s" : ""}
-                </p>
+      {/* Bottom section: Reviews (left) + Accordion details (right) */}
+      <div className="mt-12 grid gap-8 lg:grid-cols-2">
+        {/* LEFT COLUMN: Reviews */}
+        <div className="space-y-6">
+          <Card className="border-muted bg-white">
+            <CardContent className="p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold">Customer Reviews</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Based on {reviewCount} review{reviewCount !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ReviewStars value={avgRating} />
+                  <span className="font-semibold">{avgRating}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <ReviewStars value={avgRating} />
-                <span className="text-sm font-semibold text-foreground">
-                  {formatRating(avgRating)}
-                </span>
-              </div>
-            </div>
+              <Separator className="my-4" />
 
-            <Separator />
+              {isReviewsLoading && (
+                <div className="py-8 text-center text-muted-foreground">
+                  Loading reviews...
+                </div>
+              )}
+              {reviewsError && (
+                <div className="py-8 text-center text-muted-foreground">
+                  Unable to load reviews.
+                </div>
+              )}
+              {!isReviewsLoading && !reviewsError && (
+                <ReviewList
+                  reviews={reviews}
+                  emptyMessage="No reviews yet. Be the first to review this medicine!"
+                />
+              )}
+            </CardContent>
+          </Card>
 
-            {isReviewLoading && (
-              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                Loading reviews...
-              </div>
-            )}
+          {/* Review submission area (only if eligible) */}
+          <Card className="border-muted bg-white">
+            <CardContent className="p-6">
+              {!isAuthenticated && (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground">
+                    Log in to write a review.
+                  </p>
+                  <Button asChild variant="outline" size="sm" className="mt-3">
+                    <Link href="/login">Sign in</Link>
+                  </Button>
+                </div>
+              )}
 
-            {reviewError && (
-              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                Unable to load reviews.
-              </div>
-            )}
+              {isAuthenticated && !isCustomer && (
+                <div className="text-center py-4 text-muted-foreground">
+                  Only customers can submit reviews.
+                </div>
+              )}
 
-            {!isReviewLoading && !reviewError && (
-              <ReviewList
-                reviews={reviews}
-                emptyMessage="Be the first to review."
-              />
-            )}
-          </CardContent>
-        </Card>
+              {isCustomer && isOrdersLoading && (
+                <div className="text-center py-4 text-muted-foreground">
+                  Checking your order history...
+                </div>
+              )}
 
-        <Card className="border-muted bg-white">
-          <CardContent className="space-y-4 p-6">
-            {!user && (
-              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                <p>Log in to share your review.</p>
-                <Button asChild variant="outline" size="sm" className="mt-3">
-                  <Link href="/login">Go to login</Link>
-                </Button>
-              </div>
-            )}
+              {isCustomer && ordersError && (
+                <div className="text-center py-4 text-muted-foreground">
+                  Could not verify your orders.
+                </div>
+              )}
 
-            {user && !isCustomer && (
-              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                Only customers can submit reviews.
-              </div>
-            )}
-
-            {user && isCustomer && isOrdersLoading && (
-              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                Checking your delivered orders...
-              </div>
-            )}
-
-            {user && isCustomer && ordersError && (
-              <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                Unable to verify your order history.
-              </div>
-            )}
-
-            {user &&
-              isCustomer &&
-              !isOrdersLoading &&
-              !ordersError &&
-              userReview && (
-                <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+              {isCustomer && !isOrdersLoading && !ordersError && userReview && (
+                <div className="space-y-3 rounded-lg border bg-neutral-50 p-4 dark:bg-neutral-900">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-foreground">
-                      Your review
-                    </p>
+                    <p className="font-semibold">Your review</p>
                     <ReviewStars value={userReview.rating} />
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm">
                     {userReview.comment || "No comment provided."}
                   </p>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -510,112 +508,162 @@ const MedicineDetailsPage = () => {
                 </div>
               )}
 
-            {user &&
-              isCustomer &&
-              !isOrdersLoading &&
-              !ordersError &&
-              !userReview &&
-              !reviewableOrderItem && (
-                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                  Order and receive this medicine to leave a review.
-                </div>
-              )}
+              {isCustomer &&
+                !isOrdersLoading &&
+                !ordersError &&
+                !userReview &&
+                canCreateReview && (
+                  <ReviewForm
+                    onSubmit={({ rating, comment }) => {
+                      if (!reviewableOrderItem) {
+                        toast.error(
+                          "No delivered order found for this medicine",
+                        );
+                        return;
+                      }
+                      createReviewMutation.mutate({
+                        orderItemId: reviewableOrderItem.id,
+                        rating,
+                        comment,
+                      });
+                    }}
+                    isSubmitting={createReviewMutation.isPending}
+                  />
+                )}
 
-            {user &&
-              isCustomer &&
-              !isOrdersLoading &&
-              !ordersError &&
-              canCreateReview && (
-                <ReviewForm
-                  onSubmit={({ rating, comment }) => {
-                    if (!reviewableOrderItem) {
-                      toast.error("No delivered order found for review");
-                      return;
-                    }
-                    createReviewMutation.mutate({
-                      orderItemId: reviewableOrderItem.id,
-                      rating,
-                      comment,
-                    });
-                  }}
-                  isSubmitting={createReviewMutation.isPending}
-                />
-              )}
-          </CardContent>
-        </Card>
+              {isCustomer &&
+                !isOrdersLoading &&
+                !ordersError &&
+                !userReview &&
+                !canCreateReview && (
+                  <div className="text-center py-4 text-muted-foreground">
+                    You can only review this medicine after receiving it (order
+                    status = Delivered).
+                  </div>
+                )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* RIGHT COLUMN: Accordion details */}
+        <div className="space-y-4">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="medicine-details">
+              <AccordionTrigger className="text-base font-semibold">
+                Medicine Details
+              </AccordionTrigger>
+              <AccordionContent className="space-y-2 text-sm">
+                <p>
+                  <span className="font-medium">Description:</span>{" "}
+                  {medicine.description || "No description provided."}
+                </p>
+                <p>
+                  <span className="font-medium">Dosage Form:</span>{" "}
+                  {medicine.dosageForm || "-"}
+                </p>
+                <p>
+                  <span className="font-medium">Strength:</span>{" "}
+                  {medicine.strength || "-"}
+                </p>
+                <p>
+                  <span className="font-medium">Stock:</span> {medicine.stock}
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="manufacturer-details">
+              <AccordionTrigger className="text-base font-semibold">
+                Manufacturer Details
+              </AccordionTrigger>
+              <AccordionContent className="space-y-2 text-sm">
+                <p>
+                  <span className="font-medium">Name:</span>{" "}
+                  {medicine.manufacturer?.name || "-"}
+                </p>
+                <p>
+                  <span className="font-medium">Country:</span>{" "}
+                  {medicine.manufacturer?.country || "-"}
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="category-details">
+              <AccordionTrigger className="text-base font-semibold">
+                Category Details
+              </AccordionTrigger>
+              <AccordionContent className="space-y-2 text-sm">
+                <p>
+                  <span className="font-medium">Name:</span>{" "}
+                  {medicine.category?.name || "-"}
+                </p>
+                <p>
+                  <span className="font-medium">Description:</span>{" "}
+                  {medicine.category?.description ||
+                    "No description available."}
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="seller-details">
+              <AccordionTrigger className="text-base font-semibold">
+                Seller Information
+              </AccordionTrigger>
+              <AccordionContent className="space-y-2 text-sm">
+                <p>
+                  <span className="font-medium">Shop Name:</span>{" "}
+                  {seller?.shopName || "-"}
+                </p>
+                <p>
+                  <span className="font-medium">Address:</span>{" "}
+                  {seller?.shopAddress || "-"}
+                </p>
+                <p>
+                  <span className="font-medium">Phone:</span>{" "}
+                  {seller?.shopPhone || "-"}
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="how-to-review">
+              <AccordionTrigger className="text-base font-semibold">
+                How to leave a review?
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">
+                <p>
+                  1. Place an order for this medicine.
+                  <br />
+                  2. Wait until the order status changes to{" "}
+                  <strong>Delivered</strong>.<br />
+                  3. After delivery, you will be able to write a review here.
+                </p>
+                <p className="mt-2 text-xs">
+                  Only customers who have received this product can leave a
+                  review.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
       </div>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <Card className="border-muted bg-white">
-          <CardContent className="space-y-3 p-6">
-            <h2 className="text-lg font-semibold text-foreground">
-              Description
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {data.description || "No description provided."}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-muted bg-white">
-          <CardContent className="space-y-4 p-6 text-sm">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Manufacturer country
-              </p>
-              <p className="font-medium text-foreground">
-                {data.manufacturer?.country ?? "-"}
-              </p>
-            </div>
-            <Separator />
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Category description
-              </p>
-              <p className="text-muted-foreground">
-                {data.category?.description || "No description available."}
-              </p>
-            </div>
-            <Separator />
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Seller
-              </p>
-              <p className="font-medium text-foreground">
-                {data.seller?.name
-                  ? `${data.seller.name} (${sellerName || "-"})`
-                  : sellerName || "-"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* Dialogs for edit/delete review */}
       <ReviewEditDialog
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
         review={userReview}
         isSubmitting={updateReviewMutation.isPending}
         onSubmit={(payload) => {
-          if (!userReview) {
-            return;
-          }
-          updateReviewMutation.mutate({
-            reviewId: userReview.id,
-            payload,
-          });
+          if (!userReview) return;
+          updateReviewMutation.mutate({ reviewId: userReview.id, payload });
         }}
       />
-
       <ReviewDeleteDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
-        reviewTitle={data.name}
+        reviewTitle={medicine.name}
         isDeleting={deleteReviewMutation.isPending}
         onConfirm={() => {
-          if (!userReview) {
-            return;
-          }
+          if (!userReview) return;
           deleteReviewMutation.mutate(userReview.id);
         }}
       />

@@ -12,7 +12,7 @@ const formatPrice = (value: number | string) => {
   if (!Number.isFinite(numericValue)) {
     return "-";
   }
-  return `$${numericValue}`;
+  return `BDT ${numericValue}`;
 };
 
 type MedicineCardProps = {
@@ -20,84 +20,60 @@ type MedicineCardProps = {
 };
 
 const MedicineCard = ({ medicine }: MedicineCardProps) => {
-  const sellerName = medicine.seller?.shopName || medicine.seller?.name || "";
-
   return (
-    <Card className="group overflow-hidden border-muted bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
-      <div className="relative h-40 w-full bg-[linear-gradient(135deg,_rgba(16,185,129,0.16),_rgba(236,253,245,1))]">
+    <Card className="group overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+      {/* Image area */}
+      <div className="relative h-40 w-full overflow-hidden bg-gray-50">
         {medicine.imageUrl ? (
           <img
             src={medicine.imageUrl}
             alt={medicine.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
             No image
           </div>
         )}
       </div>
 
-      <CardContent className="space-y-3 p-4">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">
-              {medicine.name}
-            </h3>
-            <p className="text-xs text-muted-foreground">{sellerName}</p>
-          </div>
-          <Badge variant={medicine.isAvailable ? "default" : "destructive"}>
+      <CardContent className="space-y-2 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="line-clamp-1 text-base font-semibold text-gray-900">
+            {medicine.name}
+          </h3>
+          <Badge
+            variant={medicine.isAvailable ? "default" : "destructive"}
+            className="shrink-0"
+          >
             {medicine.isAvailable ? "Available" : "Unavailable"}
           </Badge>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {medicine.isFeatured && (
-            <Badge variant="secondary" className="rounded-full">
-              Featured
-            </Badge>
-          )}
-          <Badge variant="outline" className="rounded-full">
-            {medicine.dosageForm}
-          </Badge>
-          <Badge variant="outline" className="rounded-full">
-            {medicine.strength}
-          </Badge>
-        </div>
-
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <div className="flex items-center justify-between">
-            <span>Price</span>
-            <span className="font-semibold text-emerald-700">
-              {formatPrice(medicine.price)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Stock</span>
-            <span className="font-medium text-foreground">
-              {medicine.stock}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Category</span>
-            <span className="font-medium text-foreground">
-              {medicine.category?.name ?? "-"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Manufacturer</span>
-            <span className="font-medium text-foreground">
-              {medicine.manufacturer?.name ?? "-"}
-            </span>
-          </div>
+        <div className="space-y-1 text-sm">
+          <p className="text-gray-500">
+            <span className="font-medium text-gray-700">Category:</span>{" "}
+            {medicine.category?.name || "Uncategorized"}
+          </p>
+          <p className="text-gray-500">
+            <span className="font-medium text-gray-700">Manufacturer:</span>{" "}
+            {medicine.manufacturer?.name || "—"}
+          </p>
+          <p className="text-base font-semibold text-gray-900">
+            {formatPrice(medicine.price)}
+          </p>
         </div>
       </CardContent>
 
       <CardFooter className="p-4 pt-0">
-        <Button asChild className="w-full" variant="outline">
+        <Button
+          asChild
+          variant="default"
+          className="w-full bg-black hover:bg-gray-800"
+        >
           <Link
             href={`/medicine/${medicine.id}`}
-            className="inline-flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-2"
           >
             <ShoppingCart className="h-4 w-4" />
             Add to cart

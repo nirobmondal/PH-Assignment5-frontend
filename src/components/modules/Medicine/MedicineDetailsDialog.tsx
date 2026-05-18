@@ -15,7 +15,7 @@ const formatPrice = (value: number) => {
   if (Number.isNaN(value)) {
     return "-";
   }
-  return `$${value}`;
+  return `BDT ${value}`;
 };
 
 type MedicineDetailsDialogProps = {
@@ -83,11 +83,7 @@ const MedicineDetailsDialog = ({
                 <Label className="text-xs text-muted-foreground">
                   Average rating
                 </Label>
-                <p className="text-sm font-medium">
-                  {Number.isFinite(medicine.avgRating)
-                    ? medicine.avgRating.toFixed(1)
-                    : "-"}
-                </p>
+                <p className="text-sm font-medium">{medicine.avgRating}</p>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">

@@ -128,7 +128,7 @@ const DashboardSidebarContent = ({
   const pathname = usePathname();
 
   // Role-based dashboard title
-  const roleTitle = `${userInfo.role.toLowerCase().charAt(0).toUpperCase() + userInfo.role.toLowerCase().slice(1)}   Dashboard`;
+  const roleTitle = `${(userInfo?.role?.toLowerCase().charAt(0).toUpperCase() || "") + (userInfo?.role?.toLowerCase().slice(1) || "")} Dashboard`;
 
   return (
     <div className="hidden md:flex h-full w-64 flex-col border-r bg-card  overflow-y-auto">
@@ -187,25 +187,17 @@ const DashboardSidebarContent = ({
         <div className="flex items-center gap-3 p-2 rounded-lg bg-accent/50">
           {/* Avatar: image if exists, else initial */}
           <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {userInfo.image ? (
-              <img
-                src={userInfo.image}
-                alt={userInfo.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-sm font-bold text-primary-foreground">
-                {userInfo.name.charAt(0).toUpperCase()}
-              </span>
-            )}
+            <span className="text-sm font-bold text-primary-foreground">
+              {userInfo.name.charAt(0).toUpperCase()}
+            </span>
           </div>
 
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold truncate text-foreground">
-              {userInfo.name}
+              {userInfo?.name}
             </p>
             <p className="text-xs text-muted-foreground capitalize">
-              {userInfo.role.toLowerCase().replace("_", " ")}
+              {userInfo?.role?.toLowerCase().replace("_", " ") || "N/A"}
             </p>
           </div>
         </div>

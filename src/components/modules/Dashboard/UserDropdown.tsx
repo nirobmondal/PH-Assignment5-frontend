@@ -115,27 +115,19 @@ const UserDropdown = ({ userInfo }: UserDropdownProps) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant={"outline"} className="h-9 w-9 rounded-full p-0">
-          {userInfo.image ? (
-            <img
-              src={userInfo.image}
-              alt={userInfo.name}
-              className="h-full w-full rounded-full object-cover"
-            />
-          ) : (
-            <span className="text-sm font-semibold">
-              {userInfo.name.charAt(0).toUpperCase()}
-            </span>
-          )}
+          <span className="text-sm font-semibold">
+            {userInfo.name.charAt(0).toUpperCase()}
+          </span>
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align={"end"} className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium">{userInfo.name}</p>
-            <p className="text-xs text-muted-foreground">{userInfo.email}</p>
+            <p className="text-sm font-medium">{userInfo?.name}</p>
+            <p className="text-xs text-muted-foreground">{userInfo?.email}</p>
             <p className="text-xs text-primary capitalize">
-              {userInfo.role.toLowerCase().replace("_", " ")}
+              {userInfo?.role?.toLowerCase().replace("_", " ") || "N/A"}
             </p>
           </div>
         </DropdownMenuLabel>

@@ -54,8 +54,8 @@ const updateSellerProfileValidationSchema = z.object({
     .trim()
     .min(1, "Shop name is required")
     .max(250, "Shop name can be at most 250 characters"),
-  shopAddress: z.string().trim().min(1).optional(),
-  shopPhone: z.string().trim().min(1).optional(),
+  shopAddress: z.string().optional(),
+  shopPhone: z.string().optional(),
 });
 
 const updateUserValidationSchema = z.object({
@@ -64,7 +64,7 @@ const updateUserValidationSchema = z.object({
     .trim()
     .min(1, "Name is required")
     .max(250, "Name can be at most 250 characters"),
-  phone: z.string().trim().optional(),
+  phone: z.string().optional(),
 });
 
 const resendVerificationOtpValidationSchema = z.object({

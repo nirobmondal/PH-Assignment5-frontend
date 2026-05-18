@@ -74,7 +74,7 @@ export default function MyProfilePage() {
       }
 
       // If seller, validate seller fields
-      if (user.role === "SELLER") {
+      if (user?.role === "SELLER") {
         const sellerValid =
           authValidation.updateSellerProfileValidationSchema.safeParse({
             shopName: value.shopName,
@@ -93,7 +93,7 @@ export default function MyProfilePage() {
         name: value.name,
         phone: value.phone,
       };
-      if (user.role === "SELLER") {
+      if (user?.role === "SELLER") {
         dataObj.seller = {
           shopName: value.shopName,
           shopPhone: value.shopPhone,
@@ -160,7 +160,7 @@ export default function MyProfilePage() {
     );
   }
 
-  const isSeller = user.role === "SELLER";
+  const isSeller = user?.role === "SELLER";
 
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-md">
@@ -214,14 +214,16 @@ export default function MyProfilePage() {
             </div>
             <div className="flex-1 text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                <h3 className="text-lg font-semibold">{user.name}</h3>
+                <h3 className="text-lg font-semibold">{user?.name}</h3>
                 <Badge
-                  variant={user.role === "ADMIN" ? "destructive" : "default"}
+                  variant={user?.role === "ADMIN" ? "destructive" : "default"}
                 >
-                  {user.role}
+                  {user?.role || "N/A"}
                 </Badge>
               </div>
-              <p className="mt-2 text-md text-muted-foreground">{user.email}</p>
+              <p className="mt-2 text-md text-muted-foreground">
+                {user?.email}
+              </p>
             </div>
           </div>
 

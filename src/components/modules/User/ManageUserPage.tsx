@@ -151,21 +151,23 @@ const ManageUserPage = () => {
       {
         accessorKey: "role",
         header: "Role",
-        cell: ({ row }) => row.original.role.toLowerCase(),
+        cell: ({ row }) => row.original.role?.toLowerCase() || "N/A",
       },
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }) => <StatusBadgeCell status={row.original.status} />,
+        cell: ({ row }) => (
+          <StatusBadgeCell status={row.original.status || "ACTIVE"} />
+        ),
       },
       {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
           const user = row.original;
-          const isAdmin = user.role === UserRole.ADMIN;
+          const isAdmin = user?.role === UserRole.ADMIN;
           const nextStatus =
-            user.status === UserStatus.ACTIVE
+            user?.status === UserStatus.ACTIVE
               ? UserStatus.BANNED
               : UserStatus.ACTIVE;
 
@@ -195,7 +197,7 @@ const ManageUserPage = () => {
                       })
                     }
                   >
-                    {user.status === UserStatus.ACTIVE ? "Ban" : "Activate"}
+                    {user?.status === UserStatus.ACTIVE ? "Ban" : "Activate"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -191,7 +191,7 @@ const AdminOrdersPage = () => {
             }}
             search={{
               initialValue: searchTerm,
-              placeholder: "Search orders",
+              placeholder: "Search by customer name, shop name",
               onDebouncedChange: (value) => {
                 setSearchTerm(value);
                 setPagination((prev) => ({ ...prev, pageIndex: 0 }));

@@ -132,7 +132,7 @@ const ManageMedicinePage = () => {
         name: value.name,
         phone: value.phone,
       };
-      if (user.role === "SELLER") {
+      if (user?.role === "SELLER") {
         dataObj.seller = {
           shopName: value.shopName,
           shopPhone: value.shopPhone,

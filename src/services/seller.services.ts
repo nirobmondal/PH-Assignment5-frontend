@@ -35,13 +35,11 @@ export const createSellerProfile = async (
     }
 
     const { accessToken, refreshToken, token, user } = response.data;
-    const { role } = user;
     await setTokenInCookies("accessToken", accessToken);
     await setTokenInCookies("refreshToken", refreshToken);
     await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60);
 
-    const targetPath = getDefaultDashboardRoute(role as UserRole);
-    redirect(targetPath);
+    return response;
   } catch (error: any) {
     console.log(error, "error");
     if (

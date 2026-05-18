@@ -42,12 +42,12 @@ const UserDetailsDialog = ({
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Role</Label>
                 <p className="font-medium text-foreground">
-                  {user.role.toLowerCase()}
+                  {user?.role?.toLowerCase() || "N/A"}
                 </p>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Status</Label>
-                <StatusBadgeCell status={user.status} />
+                <StatusBadgeCell status={user?.status || "ACTIVE"} />
               </div>
             </div>
             <div className="space-y-1">

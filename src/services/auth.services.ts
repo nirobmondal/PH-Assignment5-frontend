@@ -135,7 +135,7 @@ export const loginUser = async (
       redirect(targetPath);
     }
   } catch (error: any) {
-    console.log(error, "error");
+    // Check for Next.js redirect error first
     if (
       error &&
       typeof error === "object" &&
@@ -145,6 +145,8 @@ export const loginUser = async (
     ) {
       throw error;
     }
+
+    console.error("Login error:", error);
 
     if (
       error &&

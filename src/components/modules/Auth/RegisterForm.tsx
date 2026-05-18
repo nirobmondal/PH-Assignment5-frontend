@@ -148,7 +148,7 @@ const RegisterForm = () => {
                     label=""
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••"
-                    className="pl-9 pr-10"
+                    className="pl-9"
                     append={
                       <Button
                         type="button"
@@ -158,7 +158,7 @@ const RegisterForm = () => {
                         aria-label={
                           showPassword ? "Hide password" : "Show password"
                         }
-                        className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="text-gray-400 hover:text-gray-600"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />

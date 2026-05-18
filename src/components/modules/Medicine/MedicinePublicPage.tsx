@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, memo } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  memo,
+  useTransition,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Filter, ArrowUpDown, Check, SlidersHorizontal } from "lucide-react";
@@ -207,6 +214,9 @@ const MedicinePublicPage = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const page = parseNumberParam(searchParams.get("page"), 1);
   const limitParam = searchParams.get("limit");
@@ -241,8 +251,11 @@ const MedicinePublicPage = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
     const nextQuery = params.toString();
-    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname);
-  }, [pathname, router, searchParams]);
+    const href = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+    startTransition(() => {
+      router.replace(href);
+    });
+  }, [pathname, router, searchParams, startTransition]);
 
   const updateQueryParams = useCallback(
     (updates: Record<string, string | undefined>, resetPage = true) => {
@@ -254,9 +267,12 @@ const MedicinePublicPage = () => {
       if (resetPage) params.set("page", "1");
       if (params.get("page") === "1") params.delete("page");
       const nextQuery = params.toString();
-      router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+      const href = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+      startTransition(() => {
+        router.push(href);
+      });
     },
-    [searchParams, pathname, router],
+    [searchParams, pathname, router, startTransition],
   );
 
   const queryString = useMemo(() => {
@@ -435,7 +451,10 @@ const MedicinePublicPage = () => {
 
             {/* Mobile filter button */}
             <div className="mb-4 lg:hidden">
-              <Sheet>
+              <Sheet
+                open={mobileFiltersOpen}
+                onOpenChange={setMobileFiltersOpen}
+              >
                 <SheetTrigger asChild>
                   <Button
                     variant="outline"
@@ -461,7 +480,7 @@ const MedicinePublicPage = () => {
                       onMaxPriceChange={setMaxPriceInput}
                       onApplyPriceRange={applyPriceRange}
                       onClearFilters={clearFilters}
-                      onItemClick={() => document.body.click()}
+                      onItemClick={() => setMobileFiltersOpen(false)}
                       onCategorySelect={handleCategorySelect}
                       onManufacturerSelect={handleManufacturerSelect}
                     />

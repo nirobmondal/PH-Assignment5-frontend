@@ -128,3 +128,9 @@
     @apply font-sans;
   }
 }
+
+.google-login-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}

@@ -30,6 +30,7 @@ type AppFieldProps = {
   append?: React.ReactNode;
   prepend?: React.ReactNode;
   className?: string;
+  wrapperClassName?: string;
   disabled?: boolean;
 };
 
@@ -41,6 +42,7 @@ const AppField = ({
   append,
   prepend,
   className,
+  wrapperClassName,
   disabled = false,
 }: AppFieldProps) => {
   const firstError =
@@ -49,20 +51,22 @@ const AppField = ({
       : null;
 
   const hasError = firstError !== null;
+  const showLabel = label.trim().length > 0;
 
   return (
-    <div className={cn("space-y-1.5", className)}>
-      <Label
-        htmlFor={field.name}
-        className={cn(hasError && "text-destructive")}
-      >
-        {label}
-      </Label>
+    <div className={cn("space-y-1.5", wrapperClassName)}>
+      {showLabel && (
+        <Label
+          htmlFor={field.name}
+          className={cn(hasError && "text-destructive")}
+        >
+          {label}
+        </Label>
+      )}
 
-      {/* Relative container only for input + prepend/append */}
       <div className="relative">
         {prepend && (
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3">
             {prepend}
           </div>
         )}
@@ -82,17 +86,17 @@ const AppField = ({
             prepend && "pl-10",
             append && "pr-10",
             hasError && "border-destructive focus-visible:ring-destructive/20",
+            className,
           )}
         />
 
         {append && (
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-10 pointer-events-auto">
+          <div className="pointer-events-auto absolute inset-y-0 right-0 z-10 flex items-center pr-3">
             {append}
           </div>
         )}
       </div>
 
-      {/* Error message is now OUTSIDE the relative div */}
       {hasError && (
         <p
           id={`${field.name}-error`}

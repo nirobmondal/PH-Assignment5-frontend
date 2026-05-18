@@ -397,6 +397,11 @@ const MedicineDetailsPage = () => {
                 Add to cart
               </Button>
             </div>
+            {!isCustomer && (
+              <p className="text-xs text-muted-foreground mt-3">
+                Only customers can add items to cart.
+              </p>
+            )}
             {!isAuthenticated && (
               <p className="text-xs text-muted-foreground mt-3">
                 Please{" "}

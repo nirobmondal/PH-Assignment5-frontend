@@ -118,7 +118,7 @@ export default function ChangePasswordForm() {
                     label=""
                     type={showCurrent ? "text" : "password"}
                     placeholder="Enter current password"
-                    className="pl-9 pr-10"
+                    className="pl-9"
                     append={
                       <Button
                         type="button"
@@ -128,7 +128,7 @@ export default function ChangePasswordForm() {
                         aria-label={
                           showCurrent ? "Hide password" : "Show password"
                         }
-                        className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="text-gray-400 hover:text-gray-600"
                       >
                         {showCurrent ? (
                           <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -163,14 +163,14 @@ export default function ChangePasswordForm() {
                     label=""
                     type={showNew ? "text" : "password"}
                     placeholder="New password (min. 8 characters)"
-                    className="pl-9 pr-10"
+                    className="pl-9"
                     append={
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         onClick={() => setShowNew((prev) => !prev)}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="text-gray-400 hover:text-gray-600"
                       >
                         {showNew ? (
                           <EyeOff className="h-4 w-4" />

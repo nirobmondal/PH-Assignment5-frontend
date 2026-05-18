@@ -1,11 +1,13 @@
 "use client";
 
+import { memo } from "react";
+import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { MedicineWithRelations } from "@/types/medicine.types";
-import { ShoppingCart } from "lucide-react";
-import Link from "next/link";
 
 const formatPrice = (value: number | string) => {
   const numericValue = typeof value === "string" ? Number(value) : value;
@@ -19,15 +21,16 @@ type MedicineCardProps = {
   medicine: MedicineWithRelations;
 };
 
-const MedicineCard = ({ medicine }: MedicineCardProps) => {
+const MedicineCard = memo(function MedicineCard({ medicine }: MedicineCardProps) {
   return (
     <Card className="group overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-      {/* Image area */}
       <div className="relative h-40 w-full overflow-hidden bg-gray-50">
         {medicine.imageUrl ? (
           <img
             src={medicine.imageUrl}
             alt={medicine.name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -73,6 +76,7 @@ const MedicineCard = ({ medicine }: MedicineCardProps) => {
         >
           <Link
             href={`/medicine/${medicine.id}`}
+            prefetch
             className="flex items-center justify-center gap-2"
           >
             <ShoppingCart className="h-4 w-4" />
@@ -82,6 +86,6 @@ const MedicineCard = ({ medicine }: MedicineCardProps) => {
       </CardFooter>
     </Card>
   );
-};
+});
 
 export default MedicineCard;

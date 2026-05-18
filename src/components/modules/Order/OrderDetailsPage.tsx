@@ -24,7 +24,7 @@ const OrderDetailsPage = () => {
   });
 
   return (
-    <div className="space-y-6 p-6">
+    <div>
       <Card>
         <CardHeader>
           <CardTitle>Order Details</CardTitle>

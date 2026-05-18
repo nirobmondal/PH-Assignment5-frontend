@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef, PaginationState } from "@tanstack/react-table";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Package, ShoppingBag } from "lucide-react";
 
 import DataTable from "@/components/shared/table/DataTable";
 import {
@@ -133,6 +134,16 @@ const OrderListPage = () => {
     },
   });
 
+  // Stable callback for pay action
+  const handlePayClick = useCallback((orderId: string) => {
+    payMutation.mutate(orderId);
+  }, []);
+
+  // Stable callback for cancel action
+  const handleCancelClick = useCallback((orderId: string) => {
+    cancelMutation.mutate(orderId);
+  }, []);
+
   const columns = useMemo<ColumnDef<IOrder>[]>(
     () => [
       {
@@ -180,7 +191,12 @@ const OrderListPage = () => {
           return (
             <div className="flex flex-wrap items-center gap-2">
               {canTrack && (
-                <Button size="sm" variant="outline" asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  asChild
+                  className="rounded-sm"
+                >
                   <Link href={`/dashboard/order/${order.id}`}>Track</Link>
                 </Button>
               )}
@@ -188,8 +204,9 @@ const OrderListPage = () => {
                 <>
                   <Button
                     size="sm"
-                    onClick={() => payMutation.mutate(order.id)}
+                    onClick={() => handlePayClick(order.id)}
                     disabled={!canPay || payMutation.isPending}
+                    className="rounded-sm"
                   >
                     Pay & confirm
                   </Button>
@@ -199,11 +216,12 @@ const OrderListPage = () => {
                         size="sm"
                         variant="destructive"
                         disabled={!canCancel || cancelMutation.isPending}
+                        className="rounded-sm"
                       >
                         Cancel
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="rounded-sm">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Cancel order</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -211,13 +229,17 @@ const OrderListPage = () => {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel disabled={cancelMutation.isPending}>
+                        <AlertDialogCancel
+                          disabled={cancelMutation.isPending}
+                          className="rounded-sm"
+                        >
                           Keep order
                         </AlertDialogCancel>
                         <AlertDialogAction
                           variant="destructive"
-                          onClick={() => cancelMutation.mutate(order.id)}
+                          onClick={() => handleCancelClick(order.id)}
                           disabled={!canCancel || cancelMutation.isPending}
+                          className="rounded-sm"
                         >
                           {cancelMutation.isPending
                             ? "Cancelling..."
@@ -233,7 +255,7 @@ const OrderListPage = () => {
         },
       },
     ],
-    [payMutation, cancelMutation],
+    [],
   );
 
   const filterConfigs: DataTableFilterConfig[] = useMemo(
@@ -265,15 +287,33 @@ const OrderListPage = () => {
   );
 
   return (
-    <div className="space-y-6 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Orders</CardTitle>
+    <div className="space-y-6 p-4 md:p-6">
+      {/* Page header */}
+      <div className="flex items-center gap-3 border-b pb-4">
+        <div className="rounded-sm bg-primary/10 p-2">
+          <Package className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold md:text-2xl">Your Orders</h1>
+          <p className="text-xs text-muted-foreground md:text-sm">
+            Track, manage, and review your order history
+          </p>
+        </div>
+      </div>
+
+      <Card className="rounded-sm border shadow-sm overflow-hidden">
+        <CardHeader className="border-b bg-muted/20 px-5 py-4">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShoppingBag className="h-4 w-4 text-primary" />
+            Order History
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-5">
           {error && (
-            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-              Unable to load orders.
+            <div className="rounded-sm border border-destructive/30 bg-destructive/5 p-8 text-center m-5">
+              <p className="text-sm text-destructive">
+                Unable to load orders. Please try again.
+              </p>
             </div>
           )}
 
@@ -288,7 +328,7 @@ const OrderListPage = () => {
             }}
             search={{
               initialValue: searchTerm,
-              placeholder: "Search orders",
+              placeholder: "Search orders...",
               onDebouncedChange: (value) => {
                 setSearchTerm(value);
                 setPagination((prev) => ({ ...prev, pageIndex: 0 }));

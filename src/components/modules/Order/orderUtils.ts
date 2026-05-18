@@ -5,7 +5,7 @@ export const formatPrice = (value: number | string) => {
   if (!Number.isFinite(numericValue)) {
     return "-";
   }
-  return `BDT ${numericValue.toFixed(2)}`;
+  return `BDT ${numericValue}`;
 };
 
 export const formatDate = (value: string | Date | undefined) => {

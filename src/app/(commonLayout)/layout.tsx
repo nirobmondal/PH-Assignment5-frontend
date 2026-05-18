@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import PublicNavbar from "@/components/shared/PublicNavbar";
 import PublicFooter from "@/components/shared/PublicFooter";
 

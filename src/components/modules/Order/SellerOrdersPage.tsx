@@ -63,17 +63,19 @@ const buildQueryString = (
   };
 };
 
-const getNextStatusOptions = (status: OrderStatus) => {
+const getNextStatusOptions = (
+  status: OrderStatus,
+): ("PROCESSING" | "SHIPPED" | "DELIVERED")[] => {
   if (status === OrderStatus.PLACED) {
-    return [OrderStatus.PROCESSING];
+    return ["PROCESSING"];
   }
   if (status === OrderStatus.PROCESSING) {
-    return [OrderStatus.SHIPPED];
+    return ["SHIPPED"];
   }
   if (status === OrderStatus.SHIPPED) {
-    return [OrderStatus.DELIVERED];
+    return ["DELIVERED"];
   }
-  return [] as OrderStatus[];
+  return [];
 };
 
 const SellerOrdersPage = () => {
@@ -87,7 +89,9 @@ const SellerOrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
-  const [nextStatus, setNextStatus] = useState<OrderStatus | "">("");
+  const [nextStatus, setNextStatus] = useState<
+    "PROCESSING" | "SHIPPED" | "DELIVERED" | ""
+  >("");
 
   const queryParams = useMemo(
     () => buildQueryString(pagination, searchTerm, filters),
@@ -119,7 +123,7 @@ const SellerOrdersPage = () => {
       status,
     }: {
       orderId: string;
-      status: OrderStatus;
+      status: "PROCESSING" | "SHIPPED" | "DELIVERED";
     }) => updateOrderStatus(orderId, { status }),
     onSuccess: (response) => {
       if (!response.success) {
@@ -307,7 +311,11 @@ const SellerOrdersPage = () => {
               ) : (
                 <Select
                   value={nextStatus}
-                  onValueChange={(value) => setNextStatus(value as OrderStatus)}
+                  onValueChange={(value) =>
+                    setNextStatus(
+                      value as "PROCESSING" | "SHIPPED" | "DELIVERED",
+                    )
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select next status" />
@@ -336,7 +344,10 @@ const SellerOrdersPage = () => {
                     nextStatus &&
                     updateMutation.mutate({
                       orderId: selectedOrder.id,
-                      status: nextStatus as OrderStatus,
+                      status: nextStatus as
+                        | "PROCESSING"
+                        | "SHIPPED"
+                        | "DELIVERED",
                     })
                   }
                 >

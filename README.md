@@ -4,10 +4,9 @@ Web client for **Niramoy**, a multi-vendor online medicine marketplace. Customer
 
 ## Live demo
 
-| Environment | URL |
-|-------------|-----|
-| Production (Vercel) | _Add your link after deploy_ |
-
+| Environment         | URL                                        |
+| ------------------- | ------------------------------------------ |
+| Production (Vercel) | https://ph-assignment5-frontend.vercel.app |
 
 ## Tech stack
 
@@ -59,12 +58,11 @@ src/
 
 Create `.env.local` in the project root (Next.js loads it for `next dev` / `next build`).
 
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `NEXT_PUBLIC_API_BASE_URL` | Yes | Backend API base URL including version prefix, e.g. `http://localhost:5000/api/v1` |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Yes | Google OAuth Web client ID for `@react-oauth/google` |
-| `JWT_ACCESS_SECRET` | If using `src/proxy.ts` as middleware | Same secret the backend uses to sign access tokens (`ACCESS_TOKEN_SECRET`) for edge verification |
-
+| Variable                       | Required                              | Purpose                                                                                          |
+| ------------------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_API_BASE_URL`     | Yes                                   | Backend API base URL including version prefix, e.g. `http://localhost:5000/api/v1`               |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Yes                                   | Google OAuth Web client ID for `@react-oauth/google`                                             |
+| `JWT_ACCESS_SECRET`            | If using `src/proxy.ts` as middleware | Same secret the backend uses to sign access tokens (`ACCESS_TOKEN_SECRET`) for edge verification |
 
 ## Local setup
 
@@ -83,10 +81,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
+| Command         | Description                   |
+| --------------- | ----------------------------- |
+| `npm run dev`   | Development server            |
+| `npm run build` | Production build              |
 | `npm run start` | Run production server locally |
-| `npm run lint` | ESLint |
-
+| `npm run lint`  | ESLint                        |

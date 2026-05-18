@@ -389,7 +389,8 @@ const MedicineDetailsPage = () => {
                 disabled={
                   !medicine.isAvailable ||
                   addToCartMutation.isPending ||
-                  !isAuthenticated
+                  !isAuthenticated ||
+                  !isCustomer
                 }
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />

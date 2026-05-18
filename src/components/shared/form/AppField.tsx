@@ -27,7 +27,13 @@ type AppFieldProps = {
     | "tel"
     | "file";
   placeholder?: string;
+  /** Right-side slot inside the input wrapper (e.g. password visibility toggle). */
   append?: React.ReactNode;
+  /**
+   * Left-side icon/content inside the input wrapper only.
+   * Do not wrap AppField in an outer relative div with absolute icons — validation
+   * errors render below the input and will shift externally positioned icons.
+   */
   prepend?: React.ReactNode;
   className?: string;
   wrapperClassName?: string;

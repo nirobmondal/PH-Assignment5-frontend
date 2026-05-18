@@ -94,16 +94,14 @@ export default function SellerCreatePage() {
                 <label className="text-sm font-medium text-gray-700">
                   Shop Name
                 </label>
-                <div className="relative">
-                  <Store className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type="text"
-                    placeholder="Niramoy Pharmacy"
-                    className="pl-9"
-                  />
-                </div>
+                <AppField
+                  field={field}
+                  label=""
+                  type="text"
+                  placeholder="Niramoy Pharmacy"
+                  prepend={<Store className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                />
               </div>
             )}
           </form.Field>
@@ -115,16 +113,14 @@ export default function SellerCreatePage() {
                 <label className="text-sm font-medium text-gray-700">
                   Shop Address
                 </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type="text"
-                    placeholder="123, Main Street, Dhaka"
-                    className="pl-9"
-                  />
-                </div>
+                <AppField
+                  field={field}
+                  label=""
+                  type="text"
+                  placeholder="123, Main Street, Dhaka"
+                  prepend={<MapPin className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                />
               </div>
             )}
           </form.Field>
@@ -136,16 +132,14 @@ export default function SellerCreatePage() {
                 <label className="text-sm font-medium text-gray-700">
                   Shop Phone
                 </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type="tel"
-                    placeholder="+8801XXXXXXXXX"
-                    className="pl-9"
-                  />
-                </div>
+                <AppField
+                  field={field}
+                  label=""
+                  type="tel"
+                  placeholder="+8801XXXXXXXXX"
+                  prepend={<Phone className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                />
               </div>
             )}
           </form.Field>

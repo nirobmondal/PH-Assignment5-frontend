@@ -86,16 +86,14 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
                 <label className="text-sm font-medium text-gray-700">
                   Email
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type="email"
-                    placeholder="you@example.com"
-                    className="pl-9"
-                  />
-                </div>
+                <AppField
+                  field={field}
+                  label=""
+                  type="email"
+                  placeholder="you@example.com"
+                  prepend={<Mail className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                />
               </div>
             )}
           </form.Field>
@@ -111,15 +109,14 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
                 <label className="text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <div className="relative">
-                  <LockKeyhole className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••"
-                    className="pl-9"
-                    append={
+                <AppField
+                  field={field}
+                  label=""
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••"
+                  prepend={<LockKeyhole className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                  append={
                       <Button
                         type="button"
                         variant="ghost"
@@ -137,8 +134,7 @@ export default function LoginForm({ redirectPath }: LoginFormProps) {
                         )}
                       </Button>
                     }
-                  />
-                </div>
+                />
               </div>
             )}
           </form.Field>

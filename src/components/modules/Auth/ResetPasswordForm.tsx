@@ -94,17 +94,15 @@ const ResetPasswordForm = () => {
                 <label className="text-sm font-medium text-gray-700">
                   Email
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type="email"
-                    placeholder="you@example.com"
-                    className="pl-9 bg-gray-50"
-                    disabled
-                  />
-                </div>
+                <AppField
+                  field={field}
+                  label=""
+                  type="email"
+                  placeholder="you@example.com"
+                  prepend={<Mail className="h-4 w-4 text-gray-400" />}
+                  className="pl-9 bg-gray-50"
+                  disabled
+                />
               </div>
             )}
           </form.Field>
@@ -119,16 +117,14 @@ const ResetPasswordForm = () => {
             {(field) => (
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">OTP</label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type="text"
-                    placeholder="123456"
-                    className="pl-9"
-                  />
-                </div>
+                <AppField
+                  field={field}
+                  label=""
+                  type="text"
+                  placeholder="123456"
+                  prepend={<KeyRound className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                />
               </div>
             )}
           </form.Field>
@@ -146,15 +142,14 @@ const ResetPasswordForm = () => {
                 <label className="text-sm font-medium text-gray-700">
                   New Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="••••••"
-                    className="pl-9"
-                    append={
+                <AppField
+                  field={field}
+                  label=""
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="••••••"
+                  prepend={<Lock className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                  append={
                       <Button
                         type="button"
                         variant="ghost"
@@ -172,8 +167,7 @@ const ResetPasswordForm = () => {
                         )}
                       </Button>
                     }
-                  />
-                </div>
+                />
               </div>
             )}
           </form.Field>

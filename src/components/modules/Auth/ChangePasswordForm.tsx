@@ -111,15 +111,14 @@ export default function ChangePasswordForm() {
                 <label className="text-sm font-medium text-gray-700">
                   Current Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type={showCurrent ? "text" : "password"}
-                    placeholder="Enter current password"
-                    className="pl-9"
-                    append={
+                <AppField
+                  field={field}
+                  label=""
+                  type={showCurrent ? "text" : "password"}
+                  placeholder="Enter current password"
+                  prepend={<Lock className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                  append={
                       <Button
                         type="button"
                         variant="ghost"
@@ -137,8 +136,7 @@ export default function ChangePasswordForm() {
                         )}
                       </Button>
                     }
-                  />
-                </div>
+                />
               </div>
             )}
           </form.Field>
@@ -156,15 +154,14 @@ export default function ChangePasswordForm() {
                 <label className="text-sm font-medium text-gray-700">
                   New Password
                 </label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type={showNew ? "text" : "password"}
-                    placeholder="New password (min. 8 characters)"
-                    className="pl-9"
-                    append={
+                <AppField
+                  field={field}
+                  label=""
+                  type={showNew ? "text" : "password"}
+                  placeholder="New password (min. 8 characters)"
+                  prepend={<KeyRound className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                  append={
                       <Button
                         type="button"
                         variant="ghost"
@@ -179,8 +176,7 @@ export default function ChangePasswordForm() {
                         )}
                       </Button>
                     }
-                  />
-                </div>
+                />
               </div>
             )}
           </form.Field>

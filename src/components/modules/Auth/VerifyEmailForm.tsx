@@ -96,16 +96,14 @@ const VerifyEmailForm = () => {
                   <label className="text-sm font-medium text-gray-700">
                     Email
                   </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <AppField
-                      field={field}
-                      label=""
-                      type="email"
-                      placeholder="you@example.com"
-                      className="pl-9"
-                    />
-                  </div>
+                  <AppField
+                    field={field}
+                    label=""
+                    type="email"
+                    placeholder="you@example.com"
+                    prepend={<Mail className="h-4 w-4 text-gray-400" />}
+                    className="pl-9"
+                  />
                 </div>
               )}
             </form.Field>
@@ -123,16 +121,14 @@ const VerifyEmailForm = () => {
                 <label className="text-sm font-medium text-gray-700">
                   One‑Time Password (OTP)
                 </label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <AppField
-                    field={field}
-                    label=""
-                    type="text"
-                    placeholder="123456"
-                    className="pl-9"
-                  />
-                </div>
+                <AppField
+                  field={field}
+                  label=""
+                  type="text"
+                  placeholder="123456"
+                  prepend={<KeyRound className="h-4 w-4 text-gray-400" />}
+                  className="pl-9"
+                />
               </div>
             )}
           </form.Field>

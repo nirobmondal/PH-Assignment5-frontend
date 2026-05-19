@@ -1,11 +1,13 @@
 "use client";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { SheetTitle } from "@/components/ui/sheet";
+import { SheetClose, SheetTitle } from "@/components/ui/sheet";
 import { getIconComponent } from "@/lib/iconMapper";
 import { cn } from "@/lib/utils";
 import { NavSection } from "@/types/dashboard.types";
 import { IUserResponse } from "@/types/user.types";
+import { X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -21,16 +23,19 @@ const DashboardMobileSidebar = ({
   userInfo,
 }: DashboardMobileSidebarProps) => {
   const pathname = usePathname();
+  const roleTitle = `${(userInfo?.role?.toLowerCase().charAt(0).toUpperCase() || "") + (userInfo?.role?.toLowerCase().slice(1) || "")} Dashboard`;
+
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-card">
-      {/* Logo / Brand */}
-      <div className="flex h-16 items-center border-b px-6 bg-gradient-to-r from-primary/10 to-transparent">
-        <Link href={dashboardHome} className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-sm font-bold text-white">N</span>
-          </div>
-          <span className="text-lg font-bold text-primary">Niramoy</span>
-        </Link>
+      {/* Role-based Dashboard Heading */}
+      <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b px-6 bg-gradient-to-r from-primary/10 to-transparent bg-card">
+        <h2 className="text-md font-bold text-primary py-5">{roleTitle}</h2>
+        <SheetClose asChild>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </SheetClose>
       </div>
 
       <SheetTitle className="sr-only">Navigation Menu</SheetTitle>

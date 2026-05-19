@@ -59,6 +59,13 @@ const Categories = () => {
           </div>
         )}
 
+        {/* Empty state */}
+        {!isLoading && !error && categories.length === 0 && (
+          <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500">
+            No categories available right now.
+          </div>
+        )}
+
         {/* Categories grid */}
         {!isLoading && !error && (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">

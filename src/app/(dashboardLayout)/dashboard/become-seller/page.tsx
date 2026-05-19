@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Store, MapPin, Phone } from "lucide-react";
 
@@ -28,6 +28,7 @@ export default function SellerCreatePage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
+  const queryClient = useQueryClient();
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (payload: ICreateSellerProfilePayload) =>
       createSellerProfile(payload),
@@ -50,6 +51,7 @@ export default function SellerCreatePage() {
         }
 
         toast.success("Seller profile created! Redirecting to dashboard...");
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
         router.push("/seller/dashboard");
       } catch (error: any) {
         setServerError(
